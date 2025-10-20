@@ -1,0 +1,430 @@
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Platform, PanResponder, GestureResponderEvent } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { useState, useRef, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Search as SearchIcon } from 'lucide-react-native';
+import { useApp } from '@/contexts/AppContext';
+import { dateToCard, dateToWeekCard, getFocusWord, startOfWeek } from '@/utils/mapping';
+
+import * as Haptics from 'expo-haptics';
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+export default function CalendarScreen() {
+  const router = useRouter();
+  const { currentStack, settings, showPeek, peekOverlay } = useApp();
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const getDaysInMonth = (y: number, m: number) => {
+    return new Date(y, m + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (y: number, m: number) => {
+    return new Date(y, m, 1).getDay();
+  };
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
+  };
+
+  const handleDayPress = (day: number) => {
+    const date = new Date(year, month, day);
+    setSelectedDate(date);
+    const { week, card } = dateToWeekCard(
+      date,
+      currentStack,
+      settings.weekStandard,
+      settings.weekStartDay,
+      settings.week53Handling
+    );
+    if (card) {
+      showPeek(card, week);
+    }
+
+    if (Platform.OS !== 'web') {
+      Haptics.selectionAsync();
+    }
+    
+    router.push(
+      `/day?year=${year}&month=${month}&day=${day}` as any
+    );
+  };
+
+  const handleHeaderPressIn = () => {
+    longPressTimer.current = setTimeout(() => {
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      router.push('/settings' as any);
+    }, 800);
+  };
+
+  const handleHeaderPressOut = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const headerPanResponder = useMemo(() =>
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => false,
+      onPanResponderGrant: (evt: GestureResponderEvent) => {
+        const touches = (evt.nativeEvent as any).touches ?? [];
+        if (touches.length === 2) {
+          const date = selectedDate ?? new Date(year, month, Math.min(new Date().getDate(), getDaysInMonth(year, month)));
+          const { week, card } = dateToWeekCard(
+            date,
+            currentStack,
+            settings.weekStandard,
+            settings.weekStartDay,
+            settings.week53Handling
+          );
+          if (card) {
+            showPeek(card, week);
+          }
+        }
+      },
+      onPanResponderRelease: () => {},
+      onPanResponderTerminationRequest: () => true,
+    })
+  , [selectedDate, year, month, currentStack, settings.weekStandard, settings.weekStartDay, settings.week53Handling, showPeek]);
+
+  const daysInMonth = getDaysInMonth(year, month);
+  const firstDay = getFirstDayOfMonth(year, month);
+  
+  const calendarDays: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) {
+    calendarDays.push(null);
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    calendarDays.push(i);
+  }
+
+  const today = new Date();
+  const isToday = (day: number | null) => {
+    if (day === null) return false;
+    return (
+      day === today.getDate() &&
+      month === today.getMonth() &&
+      year === today.getFullYear()
+    );
+  };
+
+  const isSelected = (day: number | null) => {
+    if (day === null || !selectedDate) return false;
+    return (
+      day === selectedDate.getDate() &&
+      month === selectedDate.getMonth() &&
+      year === selectedDate.getFullYear()
+    );
+  };
+
+  const isInSelectedWeek = (day: number | null) => {
+    if (day === null || !selectedDate) return false;
+    const cellDate = new Date(year, month, day);
+    const startSel = startOfWeek(selectedDate, settings.weekStandard, settings.weekStartDay);
+    const endSel = new Date(startSel.getFullYear(), startSel.getMonth(), startSel.getDate() + 6);
+    return cellDate >= startSel && cellDate <= endSel;
+  };
+
+  const selectedFocusWord = selectedDate ? getFocusWord(selectedDate, settings.seed) : null;
+
+  const screenWidth = Dimensions.get('window').width;
+  const daySize = (screenWidth - 48) / 7;
+
+  return (
+    <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      <View style={styles.header} testID="calendar-header">
+        <TouchableOpacity
+          style={styles.searchButton}
+          onPress={() => router.push('/search' as any)}
+        >
+          <SearchIcon size={24} color="#333" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} testID="calendar-scroll">
+        <TouchableOpacity
+          activeOpacity={1}
+          onLongPress={() => {
+            if (Platform.OS !== 'web') {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
+            router.push('/settings' as any);
+          }}
+          delayLongPress={600}
+          onPressIn={handleHeaderPressIn}
+          onPressOut={handleHeaderPressOut}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          {...headerPanResponder.panHandlers}
+          testID="month-header-touch"
+        >
+          <View style={styles.monthHeader} testID="month-header">
+            <TouchableOpacity onPress={handlePrevMonth} style={styles.monthButton} testID="prev-month">
+              <ChevronLeft size={28} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.monthText} testID="month-title">
+              {MONTHS[month]} {year}
+            </Text>
+            <TouchableOpacity onPress={handleNextMonth} style={styles.monthButton} testID="next-month">
+              <ChevronRight size={28} color="#333" />
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+
+        <View style={styles.daysHeader}>
+          {DAYS.map((day) => (
+            <View key={day} style={[styles.dayHeaderCell, { width: daySize }]} testID={`day-header-${day}`}>
+              <Text style={styles.dayHeaderText}>{day}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.calendarGrid}>
+          {calendarDays.map((day, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.dayCell,
+                { width: daySize, height: daySize },
+                isInSelectedWeek(day) && styles.weekCell,
+                isToday(day) && styles.todayCell,
+                isSelected(day) && styles.selectedCell,
+              ]}
+              onPress={() => day && handleDayPress(day)}
+              disabled={day === null}
+              testID={day !== null ? `day-cell-${day}` : undefined}
+            >
+              {day !== null && (
+                <>
+                  <Text
+                    style={[
+                      styles.dayText,
+                      isToday(day) && styles.todayText,
+                      isSelected(day) && styles.selectedText,
+                    ]}
+                  >
+                    {day}
+                  </Text>
+                  {settings.rehearsalMode && (
+                    <Text style={styles.rehearsalText}>
+                      {dateToCard(
+                        new Date(year, month, day),
+                        currentStack,
+                        settings.seed,
+                        settings.weekStandard,
+                        settings.weekStartDay,
+                        settings.week53Handling
+                      )?.label}
+                    </Text>
+                  )}
+                </>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {selectedFocusWord && (
+          <View style={styles.focusBar} testID="focus-bar">
+            <Text style={styles.focusLabel}>Focus</Text>
+            <Text style={styles.focusWord}>{selectedFocusWord}</Text>
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={styles.astrologyButton}
+          onPress={() => router.push('/astrology' as any)}
+          testID="astrology-button"
+        >
+          <Text style={styles.astrologyButtonText}>View Astrology</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {peekOverlay.visible && peekOverlay.card && (
+        <View style={styles.peekOverlay} pointerEvents="none" testID="peek-overlay">
+          <View style={styles.peekCard}>
+            <Text style={styles.peekText}>
+              Week {peekOverlay.weekNumber ?? peekOverlay.card.position} → {peekOverlay.card.label}
+            </Text>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+    backgroundColor: '#FAFAFA',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  searchButton: {
+    padding: 8,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  monthHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+  },
+  monthButton: {
+    padding: 8,
+  },
+  monthText: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#111',
+    letterSpacing: 0.3,
+  },
+  daysHeader: {
+    flexDirection: 'row',
+    paddingHorizontal: 24,
+    marginBottom: 8,
+  },
+  dayHeaderCell: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  dayHeaderText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#999',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 24,
+  },
+  dayCell: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    borderRadius: 12,
+  },
+  weekCell: {
+    backgroundColor: '#F1F8FF',
+  },
+  todayCell: {
+    backgroundColor: '#E8F5FF',
+  },
+  selectedCell: {
+    backgroundColor: '#007AFF',
+  },
+  dayText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  todayText: {
+    color: '#007AFF',
+    fontWeight: '700',
+  },
+  selectedText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  rehearsalText: {
+    fontSize: 8,
+    color: '#999',
+    marginTop: 2,
+  },
+  focusBar: {
+    marginHorizontal: 24,
+    marginTop: 24,
+    padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  focusLabel: {
+    fontSize: 14,
+    color: '#999',
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
+  focusWord: {
+    fontSize: 18,
+    color: '#111',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  astrologyButton: {
+    marginHorizontal: 24,
+    marginTop: 16,
+    marginBottom: 32,
+    padding: 18,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  astrologyButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  peekOverlay: {
+    position: 'absolute',
+    top: 80,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    pointerEvents: 'none',
+  },
+  peekCard: {
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  peekText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+});
