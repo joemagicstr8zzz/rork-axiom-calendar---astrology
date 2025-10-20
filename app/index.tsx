@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Platform, PanResponder, GestureResponderEvent } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Platform } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Search as SearchIcon } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { dateToCard, dateToWeekCard, getFocusWord, startOfWeek } from '@/utils/mapping';
@@ -66,11 +66,21 @@ export default function CalendarScreen() {
 
   const handleHeaderPressIn = () => {
     longPressTimer.current = setTimeout(() => {
-      if (Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const date = selectedDate ?? new Date(year, month, Math.min(new Date().getDate(), getDaysInMonth(year, month)));
+      const { week, card } = dateToWeekCard(
+        date,
+        currentStack,
+        settings.weekStandard,
+        settings.weekStartDay,
+        settings.week53Handling
+      );
+      if (card) {
+        if (Platform.OS !== 'web') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+        showPeek(card, week);
       }
-      router.push('/settings' as any);
-    }, 800);
+    }, 600);
   };
 
   const handleHeaderPressOut = () => {
@@ -80,30 +90,7 @@ export default function CalendarScreen() {
     }
   };
 
-  const headerPanResponder = useMemo(() =>
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => false,
-      onPanResponderGrant: (evt: GestureResponderEvent) => {
-        const touches = (evt.nativeEvent as any).touches ?? [];
-        if (touches.length === 2) {
-          const date = selectedDate ?? new Date(year, month, Math.min(new Date().getDate(), getDaysInMonth(year, month)));
-          const { week, card } = dateToWeekCard(
-            date,
-            currentStack,
-            settings.weekStandard,
-            settings.weekStartDay,
-            settings.week53Handling
-          );
-          if (card) {
-            showPeek(card, week);
-          }
-        }
-      },
-      onPanResponderRelease: () => {},
-      onPanResponderTerminationRequest: () => true,
-    })
-  , [selectedDate, year, month, currentStack, settings.weekStandard, settings.weekStartDay, settings.week53Handling, showPeek]);
+
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
@@ -164,17 +151,26 @@ export default function CalendarScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} testID="calendar-scroll">
         <TouchableOpacity
           activeOpacity={1}
-          onLongPress={() => {
-            if (Platform.OS !== 'web') {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            }
-            router.push('/settings' as any);
-          }}
           delayLongPress={600}
+          onLongPress={() => {
+            const date = selectedDate ?? new Date(year, month, Math.min(new Date().getDate(), getDaysInMonth(year, month)));
+            const { week, card } = dateToWeekCard(
+              date,
+              currentStack,
+              settings.weekStandard,
+              settings.weekStartDay,
+              settings.week53Handling
+            );
+            if (card) {
+              if (Platform.OS !== 'web') {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }
+              showPeek(card, week);
+            }
+          }}
           onPressIn={handleHeaderPressIn}
           onPressOut={handleHeaderPressOut}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          {...headerPanResponder.panHandlers}
           testID="month-header-touch"
         >
           <View style={styles.monthHeader} testID="month-header">
