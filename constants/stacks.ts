@@ -54,12 +54,12 @@ export const MNEMONICA_STACK: StackCard[] = [
   { position: 44, label: '9C', value: '9', suit: 'C' },
   { position: 45, label: 'JS', value: 'J', suit: 'S' },
   { position: 46, label: 'QD', value: 'Q', suit: 'D' },
-  { position: 47, label: '10D', value: '10', suit: 'D' },
-  { position: 48, label: '6C', value: '6', suit: 'C' },
-  { position: 49, label: 'AH', value: 'A', suit: 'H' },
-  { position: 50, label: '9D', value: '9', suit: 'D' },
-  { position: 51, label: 'QS', value: 'Q', suit: 'S' },
-  { position: 52, label: '7C', value: '7', suit: 'C' },
+  { position: 47, label: '7C', value: '7', suit: 'C' },
+  { position: 48, label: 'QS', value: 'Q', suit: 'S' },
+  { position: 49, label: '10D', value: '10', suit: 'D' },
+  { position: 50, label: '6C', value: '6', suit: 'C' },
+  { position: 51, label: 'AH', value: 'A', suit: 'H' },
+  { position: 52, label: '9D', value: '9', suit: 'D' },
 ];
 
 export const ARONSON_STACK: StackCard[] = [
