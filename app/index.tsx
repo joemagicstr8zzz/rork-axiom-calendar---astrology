@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Platform, PanResponder, GestureResponderEvent } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Search as SearchIcon } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Search as SearchIcon, Settings as SettingsIcon } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { dateToCard, dateToWeekCard, getFocusWord, startOfWeek } from '@/utils/mapping';
 
@@ -211,12 +211,22 @@ export default function CalendarScreen() {
       
       <View style={styles.header} testID="calendar-header">
         <TouchableOpacity
-          style={styles.searchButton}
-          onPress={() => router.push('/search' as any)}
+          style={styles.headerButton}
+          onPress={() => router.push('/settings' as any)}
+          testID="open-settings"
         >
-          <SearchIcon size={24} color="#333" />
+          <SettingsIcon size={22} color="#333" />
         </TouchableOpacity>
-        <View style={[styles.dot, forceState.locked ? styles.dotRed : forceState.snapped ? styles.dotYellow : styles.dotGreen]} />
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => router.push('/search' as any)}
+            testID="open-search"
+          >
+            <SearchIcon size={22} color="#333" />
+          </TouchableOpacity>
+          <View style={[styles.dot, forceState.locked ? styles.dotRed : forceState.snapped ? styles.dotYellow : styles.dotGreen]} />
+        </View>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} testID="calendar-scroll">
@@ -335,9 +345,10 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: '#FAFAFA',
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  searchButton: {
+  headerButton: {
     padding: 8,
   },
   scrollView: {
