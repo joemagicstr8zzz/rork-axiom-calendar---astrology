@@ -74,6 +74,14 @@ export default function MonthOverridesEditorScreen() {
 
   const clearMonth = async () => {
     if (!existing) return;
+    if (Platform.OS === 'web') {
+      const ok = typeof window !== 'undefined' ? window.confirm('Remove all overrides for this month?') : false;
+      if (ok) {
+        await removeOverridesForMonth(key);
+        setLocal(null);
+      }
+      return;
+    }
     Alert.alert('Remove overrides?', 'This will delete all overrides for this month.', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Remove', style: 'destructive', onPress: async () => {

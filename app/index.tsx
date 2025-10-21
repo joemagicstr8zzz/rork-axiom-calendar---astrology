@@ -196,11 +196,15 @@ export default function CalendarScreen() {
 
     const start = async () => {
       try {
-        const Sensors = await import(/* webpackIgnore: true */ 'expo-sensors').catch((err) => {
+        let DeviceMotion: any = null;
+        try {
+          // Prefer require to avoid dynamic import bundling issues on Metro
+          const Sensors = require('expo-sensors');
+          DeviceMotion = (Sensors as any)?.DeviceMotion ?? null;
+        } catch (err) {
           console.log('[Accel] module missing', err);
-          return null as unknown as { DeviceMotion?: any };
-        });
-        const DeviceMotion = (Sensors as any)?.DeviceMotion;
+          DeviceMotion = null;
+        }
         if (!DeviceMotion || !DeviceMotion.addListener) {
           console.log('[Accel] DeviceMotion not available');
           return;

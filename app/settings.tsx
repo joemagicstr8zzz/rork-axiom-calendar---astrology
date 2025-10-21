@@ -28,6 +28,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Week Mapping</Text>
           </View>
           <View style={styles.card}>
+            <Text style={styles.helperText}>Controls how weeks are calculated and labeled. This affects Week→Card mapping and any week highlights.</Text>
             <Text style={styles.cardLabel}>Standard</Text>
             <TouchableOpacity style={styles.option} onPress={() => saveSettings({ weekStandard: 'iso', weekStartDay: 1 })}>
               <View style={styles.optionContent}>
@@ -96,6 +97,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.card}>
+            <Text style={styles.helperText}>Choose the deck order used for reveals and mappings. Manage your own stacks in the editor.</Text>
             <Text style={styles.cardLabel}>Stack Type</Text>
             
             <TouchableOpacity
@@ -166,6 +168,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.card}>
+            <Text style={styles.helperText}>Quick private glance actions for rehearsal only. Has no effect on public UI.</Text>
             <View style={styles.switchRow}>
               <View style={styles.switchContent}>
                 <Text style={styles.optionText}>Enable Peek</Text>
@@ -187,6 +190,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.card}>
+            <Text style={styles.helperText}>Shows private training info on the calendar so you can practice mappings. Never show during performance.</Text>
             <View style={styles.switchRow}>
               <View style={styles.switchContent}>
                 <Text style={styles.optionText}>Show Hidden Values</Text>
@@ -207,6 +211,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Force Mode</Text>
           </View>
           <View style={styles.card}>
+            <Text style={styles.helperText}>Force Mode lets you secretly control which month/day opens. Month snap and Day Lock can run together or separately. Accelerometer and gesture/remote triggers are available. Turn Force Mode ON first; then configure Month/Day and triggers.</Text>
             <View style={styles.switchRow}>
               <View style={styles.switchContent}>
                 <Text style={styles.optionText}>Enable Force Mode</Text>
@@ -282,7 +287,7 @@ export default function SettingsScreen() {
             <View style={styles.option}>
               <View style={styles.optionContent}>
                 <Text style={styles.optionText}>Invalid day fallback</Text>
-                <Text style={styles.optionSubtext}>If day doesn't exist in that month</Text>
+                <Text style={styles.optionSubtext}>If day doesn&apos;t exist in that month</Text>
               </View>
               <View style={{ flexDirection: 'row' }}>
                 {(['nearest','block'] as const).map(p => (
@@ -409,6 +414,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Custom Month Overrides</Text>
           </View>
           <View style={styles.card}>
+            <Text style={styles.helperText}>Replace normal content for a specific month with your curated items. When enabled, overrides take precedence for that month&apos;s Day Detail.</Text>
             <View style={styles.switchRow}>
               <View style={styles.switchContent}>
                 <Text style={styles.optionText}>Enable Month Overrides</Text>
@@ -436,6 +442,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Holidays</Text>
           </View>
           <View style={styles.card}>
+            <Text style={styles.helperText}>Display national holidays on the grid. Country selection changes which labels appear. US is the default.</Text>
             <View style={styles.switchRow}>
               <View style={styles.switchContent}>
                 <Text style={styles.optionText}>Show Holidays</Text>
@@ -469,6 +476,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Help & Guide</Text>
           </View>
           <View style={styles.card}>
+            <Text style={styles.helperText}>Plain-language tips and feature explanations for all users.</Text>
             <Text style={styles.cardLabel}>Learn the App</Text>
             <TouchableOpacity
               testID="open-help"
@@ -588,6 +596,7 @@ const styles = StyleSheet.create({
   },
   manageBtn: { backgroundColor: '#111', paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
   manageText: { color: '#fff', fontWeight: '700' },
+  helperText: { fontSize: 13, color: '#6B7280', lineHeight: 18, marginBottom: 12 },
   infoSection: {
     marginHorizontal: 24,
     marginTop: 32,
