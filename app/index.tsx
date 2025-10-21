@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Platform, PanResponder, GestureResponderEvent } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Search as SearchIcon } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { dateToCard, dateToWeekCard, getFocusWord, startOfWeek } from '@/utils/mapping';
@@ -16,11 +16,26 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function CalendarScreen() {
   const router = useRouter();
-  const { currentStack, settings, showPeek, peekOverlay } = useApp();
+  const { currentStack, settings, showPeek, peekOverlay, forceState, getForcedMonthDate, armAndSnap, lockForceDay, cancelForce } = useApp();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const animTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const gridPan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => false,
+    onMoveShouldSetPanResponder: (_evt, gestureState) => Math.abs(gestureState.dy) > 20 && (gestureState as any).numberActiveTouches === 2,
+    onPanResponderRelease: (evt: GestureResponderEvent, gestureState) => {
+      const touches = (evt.nativeEvent as any).touches ?? [];
+      if (touches.length === 0) {
+        if (gestureState.dy > 30) {
+          lockForceDay();
+        } else if (gestureState.dy < -30) {
+          cancelForce();
+        }
+      }
+    },
+  })).current;
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -39,6 +54,33 @@ export default function CalendarScreen() {
 
   const handleNextMonth = () => {
     setCurrentDate(new Date(year, month + 1, 1));
+  };
+
+  const animateToForcedMonth = (targetYear: number, targetMonthIndex: number) => {
+    if (animTimer.current) {
+      clearInterval(animTimer.current);
+      animTimer.current = null;
+    }
+    const target = new Date(targetYear, targetMonthIndex, 1);
+    const duration = settings.force.snapDurationMs;
+    const stepMs = 80;
+    const steps = Math.max(1, Math.floor(duration / stepMs));
+    const curr = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const dir = target > curr ? 1 : -1;
+    let iter = 0;
+    animTimer.current = setInterval(() => {
+      iter += 1;
+      const next = new Date(curr.getFullYear(), curr.getMonth() + dir * iter, 1);
+      setCurrentDate(next);
+      const passed = dir > 0 ? (next.getFullYear() > target.getFullYear() || (next.getFullYear() === target.getFullYear() && next.getMonth() >= target.getMonth())) : (next.getFullYear() < target.getFullYear() || (next.getFullYear() === target.getFullYear() && next.getMonth() <= target.getMonth()));
+      if (passed || iter >= steps) {
+        setCurrentDate(target);
+        if (animTimer.current) {
+          clearInterval(animTimer.current);
+          animTimer.current = null;
+        }
+      }
+    }, stepMs);
   };
 
   const handleDayPress = (day: number) => {
@@ -90,7 +132,35 @@ export default function CalendarScreen() {
     }
   };
 
+  const handleMonthHeaderLongPress = () => {
+    const forced = getForcedMonthDate();
+    const ok = armAndSnap();
+    if (ok.ok) {
+      animateToForcedMonth(forced.year, forced.monthIndex);
+    }
+  };
 
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const handler = (e: KeyboardEvent) => {
+        if (e.repeat) return;
+        if (e.key === 'ArrowRight') {
+          const ok = armAndSnap();
+          if (ok.ok) {
+            const forced = getForcedMonthDate();
+            animateToForcedMonth(forced.year, forced.monthIndex);
+          }
+        } else if (e.key === 'ArrowDown') {
+          lockForceDay();
+        } else if (e.key === 'ArrowLeft') {
+          cancelForce();
+        }
+      };
+      window.addEventListener('keydown', handler);
+      return () => window.removeEventListener('keydown', handler);
+    }
+    return () => {};
+  }, [armAndSnap, lockForceDay, cancelForce, getForcedMonthDate]);
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
@@ -146,28 +216,14 @@ export default function CalendarScreen() {
         >
           <SearchIcon size={24} color="#333" />
         </TouchableOpacity>
+        <View style={[styles.dot, forceState.locked ? styles.dotRed : forceState.snapped ? styles.dotYellow : styles.dotGreen]} />
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} testID="calendar-scroll">
         <TouchableOpacity
           activeOpacity={1}
           delayLongPress={600}
-          onLongPress={() => {
-            const date = selectedDate ?? new Date(year, month, Math.min(new Date().getDate(), getDaysInMonth(year, month)));
-            const { week, card } = dateToWeekCard(
-              date,
-              currentStack,
-              settings.weekStandard,
-              settings.weekStartDay,
-              settings.week53Handling
-            );
-            if (card) {
-              if (Platform.OS !== 'web') {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              }
-              showPeek(card, week);
-            }
-          }}
+          onLongPress={handleMonthHeaderLongPress}
           onPressIn={handleHeaderPressIn}
           onPressOut={handleHeaderPressOut}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -194,7 +250,7 @@ export default function CalendarScreen() {
           ))}
         </View>
 
-        <View style={styles.calendarGrid}>
+        <View style={styles.calendarGrid} {...gridPan.panHandlers}>
           {calendarDays.map((day, index) => (
             <TouchableOpacity
               key={index}
@@ -216,6 +272,7 @@ export default function CalendarScreen() {
                       styles.dayText,
                       isToday(day) && styles.todayText,
                       isSelected(day) && styles.selectedText,
+                      (settings.force.tapRemapMode === 'honest' && forceState.locked && year === getForcedMonthDate().year && month === getForcedMonthDate().monthIndex && day === Math.min(Math.max(1, settings.force.forceDay), new Date(year, month + 1, 0).getDate())) && styles.hintDayText,
                     ]}
                   >
                     {day}
@@ -423,4 +480,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.5,
   },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginLeft: 8,
+    alignSelf: 'center',
+  },
+  dotGreen: { backgroundColor: '#19C37D' },
+  dotYellow: { backgroundColor: '#F5A524' },
+  dotRed: { backgroundColor: '#F31260' },
+  hintDayText: { fontWeight: '700' },
 });

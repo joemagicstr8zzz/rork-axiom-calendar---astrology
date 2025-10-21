@@ -4,7 +4,7 @@ import { useApp } from '@/contexts/AppContext';
 import { StackType } from '@/constants/stacks';
 
 export default function SettingsScreen() {
-  const { settings, saveSettings } = useApp();
+  const { settings, saveSettings, updateForce } = useApp();
 
   const handleStackChange = (stackType: StackType) => {
     saveSettings({ stackType });
@@ -184,6 +184,77 @@ export default function SettingsScreen() {
                 trackColor={{ false: '#E0E0E0', true: '#007AFF' }}
                 thumbColor="#FFFFFF"
               />
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={[styles.sectionHeader, { backgroundColor: '#00B4FF' }]}> 
+            <Text style={styles.sectionTitle}>Force Mode</Text>
+          </View>
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>Force Target</Text>
+            <View style={styles.option}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Month</Text>
+                <Text style={styles.optionSubtext}>Relative from now: {settings.force.relativeOffset}</Text>
+              </View>
+              <View style={{ flexDirection: 'row' }}>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ relativeOffset: settings.force.relativeOffset - 1, monthMode: 'relative' })}>
+                  <Text style={{ fontSize: 18 }}>−</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ relativeOffset: settings.force.relativeOffset + 1, monthMode: 'relative' })}>
+                  <Text style={{ fontSize: 18 }}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.option}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Force Day</Text>
+                <Text style={styles.optionSubtext}>Opens this day when locked</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ forceDay: Math.max(1, settings.force.forceDay - 1) })}>
+                  <Text style={{ fontSize: 18 }}>−</Text>
+                </TouchableOpacity>
+                <Text style={{ width: 36, textAlign: 'center', fontWeight: '700' }}>{settings.force.forceDay}</Text>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ forceDay: Math.min(31, settings.force.forceDay + 1) })}>
+                  <Text style={{ fontSize: 18 }}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <Text style={[styles.cardLabel, { marginTop: 12 }]}>Tap Remap</Text>
+            <TouchableOpacity style={styles.option} onPress={() => updateForce({ tapRemapMode: 'stealth' })}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Stealth</Text>
+                <Text style={styles.optionSubtext}>Any tile tap opens forced day</Text>
+              </View>
+              <View style={[styles.radio, settings.force.tapRemapMode === 'stealth' && styles.radioSelected]} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.option} onPress={() => updateForce({ tapRemapMode: 'honest' })}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Honest Tile</Text>
+                <Text style={styles.optionSubtext}>Forced day tile subtly bolder</Text>
+              </View>
+              <View style={[styles.radio, settings.force.tapRemapMode === 'honest' && styles.radioSelected]} />
+            </TouchableOpacity>
+
+            <Text style={[styles.cardLabel, { marginTop: 12 }]}>Snap Animation</Text>
+            <View style={styles.option}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Duration</Text>
+                <Text style={styles.optionSubtext}>{settings.force.snapDurationMs} ms</Text>
+              </View>
+              <View style={{ flexDirection: 'row' }}>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ snapDurationMs: Math.max(300, settings.force.snapDurationMs - 50) })}>
+                  <Text style={{ fontSize: 18 }}>−</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ snapDurationMs: Math.min(700, settings.force.snapDurationMs + 50) })}>
+                  <Text style={{ fontSize: 18 }}>+</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
