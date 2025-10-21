@@ -124,8 +124,20 @@ export const [AppProvider, useApp] = createContextHook(() => {
     try {
       const stored = await AsyncStorage.getItem('axiom_settings');
       if (stored) {
-        const parsed = JSON.parse(stored);
-        setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+        const parsed = JSON.parse(stored) as Partial<AppSettings>;
+        const merged: AppSettings = {
+          ...DEFAULT_SETTINGS,
+          ...parsed,
+          force: {
+            ...DEFAULT_SETTINGS.force,
+            ...(parsed.force ?? {} as Partial<ForceSettings>),
+            overridesMap: {
+              ...DEFAULT_SETTINGS.force.overridesMap,
+              ...((parsed.force as Partial<ForceSettings> | undefined)?.overridesMap ?? {}),
+            },
+          },
+        } as AppSettings;
+        setSettings(merged);
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -242,7 +254,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, []);
 
   const setOverridesForMonth = useCallback(async (mo: MonthOverrides) => {
-    const updatedForce = { ...settings.force, overridesMap: { ...settings.force.overridesMap, [mo.monthYear]: mo } };
+    const safeMap = settings.force.overridesMap ?? {};
+    const updatedForce = { ...settings.force, overridesMap: { ...safeMap, [mo.monthYear]: mo } } as ForceSettings;
     const updated = { ...settings, force: updatedForce } as AppSettings;
     setSettings(updated);
     try {
@@ -253,7 +266,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [settings]);
 
   const removeOverridesForMonth = useCallback(async (key: string) => {
-    const clone = { ...settings.force.overridesMap };
+    const safeMap = settings.force.overridesMap ?? {};
+    const clone: Record<string, MonthOverrides> = { ...safeMap };
     delete clone[key];
     const updated = { ...settings, force: { ...settings.force, overridesMap: clone } } as AppSettings;
     setSettings(updated);

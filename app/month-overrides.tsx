@@ -23,11 +23,11 @@ export default function MonthOverridesEditorScreen() {
   const [monthIndex, setMonthIndex] = useState<number>(now.getMonth());
 
   const key = ymKey(year, monthIndex);
-  const existing = settings.force.overridesMap[key];
+  const existing = settings.force.overridesMap?.[key];
   const [local, setLocal] = useState<MonthOverrides | null>(existing ?? null);
 
   useEffect(() => {
-    setLocal(settings.force.overridesMap[key] ?? null);
+    setLocal(settings.force.overridesMap?.[key] ?? null);
   }, [key, settings.force.overridesMap]);
 
   const ensureLocal = () => {
