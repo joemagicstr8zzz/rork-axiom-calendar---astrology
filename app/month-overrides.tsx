@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platfo
 import { Stack, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp, DayOverride, ItemMapping, MonthOverrides, OverrideItemType } from '@/contexts/AppContext';
+import { CATALOGS_BY_TYPE, CatalogItem } from '@/constants/catalogs';
 
 function ymKey(y: number, m: number) {
   const mm = `${m + 1}`.padStart(2, '0');
@@ -63,7 +64,6 @@ export default function MonthOverridesEditorScreen() {
 
   useEffect(() => {
     applyDayCount();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year, monthIndex]);
 
   const save = async () => {
@@ -138,29 +138,96 @@ export default function MonthOverridesEditorScreen() {
             </View>
             <View style={styles.itemRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
-                {typeOptions.map((t, idx) => (
-                  <TouchableOpacity key={`${d.day}-${t}`} onPress={() => {
-                    const next = { ...local } as MonthOverrides;
-                    const cur = next.days.find(dd => dd.day === d.day)!;
-                    cur.items = [{ type: t, value: cur.items[0]?.value ?? '' }];
-                    setLocal({ ...next });
-                  }} style={[styles.typeChip, (local.days.find(dd => dd.day === d.day)?.items[0]?.type === t) && styles.typeChipActive, { marginRight: 6, marginBottom: 6 }]}>
-                    <Text style={[styles.typeText, (local.days.find(dd => dd.day === d.day)?.items[0]?.type === t) && { color: '#fff' }]}>{t}</Text>
-                  </TouchableOpacity>
-                ))}
+                {typeOptions.map((t) => {
+                  const active = (local.days.find(dd => dd.day === d.day)?.items[0]?.type === t);
+                  return (
+                    <TouchableOpacity key={`${d.day}-${t}`} onPress={() => {
+                      const next = { ...local } as MonthOverrides;
+                      const cur = next.days.find(dd => dd.day === d.day)!;
+                      const cat = (CATALOGS_BY_TYPE as any)[t] as CatalogItem[] | undefined;
+                      const defaultValue = cat && cat.length > 0 ? cat[0].value : '';
+                      cur.items = [{ type: t, value: active ? (cur.items[0]?.value ?? '') : defaultValue }];
+                      setLocal({ ...next });
+                    }} style={[styles.typeChip, active && styles.typeChipActive, { marginRight: 6, marginBottom: 6 }]}
+                    testID={`type-chip-${d.day}-${t}`}>
+                      <Text style={[styles.typeText, active && { color: '#fff' }]}>{t}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-              <TextInput
-                style={styles.input}
-                placeholder="Value (e.g., 7H, Blue, 37)"
-                placeholderTextColor="#999"
-                value={String(local.days.find(dd => dd.day === d.day)?.items[0]?.value ?? '')}
-                onChangeText={(t) => {
-                  const next = { ...local } as MonthOverrides;
-                  const cur = next.days.find(dd => dd.day === d.day)!;
-                  cur.items = [{ ...cur.items[0], value: t ?? '' }];
-                  setLocal({ ...next });
-                }}
-              />
+
+              {(() => {
+                const currentType = (local.days.find(dd => dd.day === d.day)?.items[0]?.type ?? 'Card') as OverrideItemType;
+                const catalog = (CATALOGS_BY_TYPE as any)[currentType] as CatalogItem[] | undefined;
+
+                if (currentType === 'Word' || currentType === 'Note') {
+                  return (
+                    <TextInput
+                      style={[styles.input, { marginTop: 8 }]}
+                      placeholder={currentType === 'Note' ? 'Private note' : 'Word'}
+                      placeholderTextColor="#999"
+                      value={String(local.days.find(dd => dd.day === d.day)?.items[0]?.value ?? '')}
+                      onChangeText={(t) => {
+                        const next = { ...local } as MonthOverrides;
+                        const cur = next.days.find(dd => dd.day === d.day)!;
+                        cur.items = [{ ...cur.items[0], value: t ?? '' }];
+                        setLocal({ ...next });
+                      }}
+                    />
+                  );
+                }
+
+                if (!catalog || catalog.length === 0) {
+                  return (
+                    <TextInput
+                      style={[styles.input, { marginTop: 8 }]}
+                      placeholder="Value"
+                      placeholderTextColor="#999"
+                      value={String(local.days.find(dd => dd.day === d.day)?.items[0]?.value ?? '')}
+                      onChangeText={(t) => {
+                        const next = { ...local } as MonthOverrides;
+                        const cur = next.days.find(dd => dd.day === d.day)!;
+                        cur.items = [{ ...cur.items[0], value: t ?? '' }];
+                        setLocal({ ...next });
+                      }}
+                    />
+                  );
+                }
+
+                const currentValue = local.days.find(dd => dd.day === d.day)?.items[0]?.value;
+
+                return (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}
+                    contentContainerStyle={{ paddingVertical: 4 }}>
+                    {catalog.map((it) => {
+                      const isActive = String(it.value) === String(currentValue);
+                      return (
+                        <TouchableOpacity
+                          key={`${d.day}-${currentType}-${it.id}`}
+                          onPress={() => {
+                            const next = { ...local } as MonthOverrides;
+                            const cur = next.days.find(dd => dd.day === d.day)!;
+                            cur.items = [{ ...cur.items[0], value: it.value }];
+                            setLocal({ ...next });
+                          }}
+                          style={[styles.catalogChip, isActive && styles.catalogChipActive]}
+                          testID={`catalog-chip-${d.day}-${currentType}-${it.id}`}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            {it.color ? (
+                              <View style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: it.color as string, marginRight: 8, borderWidth: 1, borderColor: '#E5E7EB' }} />
+                            ) : null}
+                            {it.emoji ? (
+                              <Text style={{ marginRight: 6 }}>{it.emoji}</Text>
+                            ) : null}
+                            <Text style={[styles.catalogText, isActive && { color: '#fff' }]}>{it.label}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                );
+              })()}
             </View>
           </View>
         ))}
@@ -185,6 +252,9 @@ const styles = StyleSheet.create({
   typeChip: { backgroundColor: '#EFEFEF', paddingHorizontal: 8, paddingVertical: 6, borderRadius: 999, marginRight: 6, marginBottom: 6 },
   typeChipActive: { backgroundColor: '#007AFF' },
   typeText: { color: '#111', fontSize: 12, fontWeight: '700' },
+  catalogChip: { backgroundColor: '#F3F4F6', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, marginRight: 8, borderWidth: 1, borderColor: '#E5E7EB' },
+  catalogChipActive: { backgroundColor: '#007AFF', borderColor: '#007AFF' },
+  catalogText: { color: '#111', fontSize: 12, fontWeight: '700' },
   saveBtn: { backgroundColor: '#111', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
   saveText: { color: '#fff', fontWeight: '800' },
 });
