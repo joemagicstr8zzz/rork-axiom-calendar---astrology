@@ -1,17 +1,19 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/contexts/AppContext';
 import { StackType } from '@/constants/stacks';
 
 export default function SettingsScreen() {
   const { settings, saveSettings, updateForce } = useApp();
+  const insets = useSafeAreaInsets();
 
   const handleStackChange = (stackType: StackType) => {
     saveSettings({ stackType });
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <Stack.Screen
         options={{
           title: 'Magician Panel',
@@ -20,7 +22,7 @@ export default function SettingsScreen() {
         }}
       />
       
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: Math.max(24, insets.bottom + 12) }} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
           <View style={[styles.sectionHeader, { backgroundColor: '#00B4FF' }]}> 
             <Text style={styles.sectionTitle}>Week Mapping</Text>
@@ -256,6 +258,29 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={[styles.sectionHeader, { backgroundColor: '#00B4FF' }]}> 
+            <Text style={styles.sectionTitle}>Help & Guide</Text>
+          </View>
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>Learn the App</Text>
+            <TouchableOpacity
+              testID="open-help"
+              accessibilityRole="button"
+              style={styles.option}
+              onPress={() => {
+                console.log('[Settings] Open Help tapped');
+                router.push('/help');
+              }}
+            >
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Open Help</Text>
+                <Text style={styles.optionSubtext}>Plain-language overview of features and tips</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
 
