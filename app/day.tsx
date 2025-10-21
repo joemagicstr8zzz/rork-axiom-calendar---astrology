@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, PanResponder, GestureResponderEvent } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useApp } from '@/contexts/AppContext';
+import { useApp, EventItem } from '@/contexts/AppContext';
 import { getHolidaysMapForMonth } from '@/constants/holidays';
 import { dateToWeekCard, getFocusWord, weekNumberToRange } from '@/utils/mapping';
 import { getZodiacSign } from '@/constants/zodiac';
@@ -14,7 +14,7 @@ export default function DayDetailScreen() {
     month: string;
     day: string;
   }>();
-  const { currentStack, settings, showPeek, peekOverlay } = useApp();
+  const { currentStack, settings, showPeek, peekOverlay, eventsByDate } = useApp();
 
   const date = new Date(parseInt(year, 10), parseInt(month, 10), parseInt(day, 10));
   const zodiacSign = getZodiacSign(date.getMonth() + 1, date.getDate());
@@ -51,6 +51,9 @@ export default function DayDetailScreen() {
 
   const monthKey = `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}`;
   const dayOverride = settings.force.overridesEnabled ? settings.force.overridesMap[monthKey]?.days.find(d => d.day === date.getDate()) : undefined;
+
+  const ymd = `${date.getFullYear()}-${`${date.getMonth()+1}`.padStart(2,'0')}-${`${date.getDate()}`.padStart(2,'0')}`;
+  const todaysEvents = eventsByDate(ymd);
 
   return (
     <View style={styles.container}>
@@ -129,6 +132,21 @@ export default function DayDetailScreen() {
           <Text style={styles.focusWord}>{focusWord}</Text>
         </View>
 
+        {/* Events list */}
+        {todaysEvents.length > 0 && (
+          <View style={styles.eventsSection}>
+            {todaysEvents.map((ev) => (
+              <TouchableOpacity key={ev.id} style={styles.eventCard} onPress={() => router.push({ pathname: '/event-detail', params: { id: ev.id } } as any)} testID={`event-${ev.id}`}>
+                <Text style={styles.eventTitle}>{ev.title || (ev.type === 'quote' ? 'Quote of the Day' : 'Event')}</Text>
+                <Text style={styles.eventSubtitle}>{ev.allDay ? 'All day' : `${ev.startTime ?? ''}${ev.endTime ? ` → ${ev.endTime}` : ''}`}</Text>
+                {ev.notes ? (
+                  <Text numberOfLines={4} style={styles.eventBody}>{ev.notes}</Text>
+                ) : null}
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
         {settings.rehearsalMode && card && (
           <View style={styles.rehearsalCard}>
             <Text style={styles.rehearsalLabel}>Rehearsal Mode</Text>
@@ -145,6 +163,15 @@ export default function DayDetailScreen() {
           <Text style={styles.signButtonText}>View {zodiacSign.name} Details</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <View style={styles.addBarWrapper}>
+        <TouchableOpacity style={styles.addBar} onPress={() => router.push({ pathname: '/event-editor', params: { date: ymd, type: 'quote' } } as any)} testID="add-event">
+          <Text style={styles.addBarText}>Add event on {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.fab} onPress={() => router.push({ pathname: '/event-editor', params: { date: ymd, type: 'quote' } } as any)} testID="fab-add">
+          <Text style={{ color: '#fff', fontWeight: '800', fontSize: 20 }}>+</Text>
+        </TouchableOpacity>
+      </View>
 
       {peekOverlay.visible && peekOverlay.card && (
         <View style={styles.peekOverlay} pointerEvents="none" testID="peek-overlay">
@@ -373,7 +400,7 @@ const styles = StyleSheet.create({
   },
   signButton: {
     marginHorizontal: 24,
-    marginBottom: 32,
+    marginBottom: 100,
     padding: 18,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -390,6 +417,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.3,
   },
+  eventsSection: { marginHorizontal: 24, marginBottom: 16 },
+  eventCard: { backgroundColor: '#E6F0FA', borderRadius: 16, padding: 16 },
+  eventTitle: { color: '#C6B88E', fontWeight: '800', fontSize: 16 },
+  eventSubtitle: { color: '#C6B88E', marginTop: 2, marginBottom: 8 },
+  eventBody: { color: '#111', lineHeight: 20 },
+  addBarWrapper: { position: 'absolute', left: 0, right: 0, bottom: 16, paddingHorizontal: 16 },
+  addBar: { backgroundColor: '#3C484F', paddingVertical: 14, borderRadius: 28, alignItems: 'center', borderWidth: 1, borderColor: '#E4D8A5' },
+  addBarText: { color: '#E4D8A5', fontWeight: '700' },
+  fab: { position: 'absolute', right: 16, bottom: 8, width: 56, height: 56, borderRadius: 12, backgroundColor: '#111', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#333' },
   peekOverlay: {
     position: 'absolute',
     top: 80,

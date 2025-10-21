@@ -17,7 +17,7 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function CalendarScreen() {
   const router = useRouter();
-  const { currentStack, settings, showPeek, peekOverlay, forceState, getForcedMonthDate, getValidForcedDayFor, armAndSnap, lockForceDay, cancelForce } = useApp();
+  const { currentStack, settings, showPeek, peekOverlay, forceState, getForcedMonthDate, getValidForcedDayFor, armAndSnap, lockForceDay, cancelForce, eventsByDate } = useApp();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
@@ -332,6 +332,11 @@ export default function CalendarScreen() {
                   >
                     {day}
                   </Text>
+                  {(() => {
+                    const ymd = `${year}-${`${month+1}`.padStart(2,'0')}-${`${day}`.padStart(2,'0')}`;
+                    const evs = eventsByDate(ymd);
+                    return evs.length > 0 ? <View style={styles.eventBar} /> : null;
+                  })()}
                   {settings.rehearsalMode && (
                     <Text style={styles.rehearsalText}>
                       {dateToCard(
@@ -490,6 +495,15 @@ const styles = StyleSheet.create({
   holidayBarSegment: {
     height: 3,
     borderRadius: 2,
+  },
+  eventBar: {
+    position: 'absolute',
+    left: 10,
+    right: 10,
+    bottom: 10,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#9AA7FF',
   },
   rehearsalText: {
     fontSize: 8,

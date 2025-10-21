@@ -156,6 +156,31 @@ export default function SettingsScreen() {
               </TouchableOpacity>
             </View>
 
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Quote day default</Text>
+            <View style={styles.option}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Default day</Text>
+                <Text style={styles.optionSubtext}>{settings.quote.quoteDayDefault ?? 'today'}</Text>
+              </View>
+              <View style={{ flexDirection: 'row' }}>
+                {(['today','tomorrow','pick'] as const).map(p => (
+                  <TouchableOpacity key={p} style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateQuote({ quoteDayDefault: p })}>
+                    <Text style={{ fontWeight: (settings.quote.quoteDayDefault ?? 'today') === p ? '700' : '400', color: (settings.quote.quoteDayDefault ?? 'today') === p ? '#007AFF' : '#666' }}>{p}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+            {settings.quote.quoteDayDefault === 'pick' && (
+              <TextInput
+                testID="quote-day-pick"
+                style={styles.input}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#AAA"
+                value={settings.quote.quoteDayPickDate ?? ''}
+                onChangeText={(t) => updateQuote({ quoteDayPickDate: t })}
+              />
+            )}
+
             <Text style={[styles.cardLabel, { marginTop: 16 }]}>Display</Text>
             <View style={styles.option}>
               <View style={styles.optionContent}>

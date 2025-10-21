@@ -24,6 +24,8 @@ function RootLayoutNav() {
       <Stack.Screen name="help" />
       <Stack.Screen name="month-overrides" />
       <Stack.Screen name="visual-libraries" options={{ title: 'Visual Libraries' }} />
+      <Stack.Screen name="event-editor" options={{ title: 'Event' }} />
+      <Stack.Screen name="event-detail" options={{ title: 'Event' }} />
     </Stack>
   );
 }

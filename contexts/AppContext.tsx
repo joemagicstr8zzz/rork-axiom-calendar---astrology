@@ -77,6 +77,29 @@ interface QuoteSettings {
   status: 'idle' | 'listening' | 'generating' | 'error';
   errorMessage?: string | null;
   injectRevealsEnabled?: boolean;
+  quoteDayDefault?: 'today' | 'tomorrow' | 'pick';
+  quoteDayPickDate?: string | null;
+}
+
+export interface EventItem {
+  id: string;
+  date: string;
+  allDay: boolean;
+  startTime?: string | null;
+  endTime?: string | null;
+  title: string;
+  notes: string;
+  type: 'quote' | 'regular';
+  injectUsed: boolean;
+  gptUsed: boolean;
+  tz: string;
+  reminderMinutes: number | null;
+  repeat: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+  calendarId: string;
+  location?: string | null;
+  attachmentUrl?: string | null;
+  createdAt: number;
+  updatedAt: number;
 }
 
 interface AppSettings {
@@ -138,11 +161,14 @@ const DEFAULT_SETTINGS: AppSettings = {
     status: 'idle',
     errorMessage: null,
     injectRevealsEnabled: false,
+    quoteDayDefault: 'today',
+    quoteDayPickDate: null,
   },
 };
 
 export const [AppProvider, useApp] = createContextHook(() => {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [events, setEvents] = useState<EventItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastLibraryPick, setLastLibraryPick] = useState<LibraryPick>(null);
   const [showMagicianPanel, setShowMagicianPanel] = useState(false);
@@ -158,6 +184,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   useEffect(() => {
     loadSettings();
+    loadEvents();
   }, []);
 
   const loadSettings = async () => {
@@ -468,6 +495,53 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }
   }, [settings]);
 
+  // Events storage and helpers
+  const loadEvents = async () => {
+    try {
+      const raw = await AsyncStorage.getItem('axiom_events');
+      if (raw) {
+        const parsed = JSON.parse(raw) as EventItem[];
+        setEvents(parsed);
+      }
+    } catch (e) {
+      console.error('Failed to load events', e);
+    }
+  };
+
+  const persistEvents = async (list: EventItem[]) => {
+    setEvents(list);
+    try {
+      await AsyncStorage.setItem('axiom_events', JSON.stringify(list));
+    } catch (e) {
+      console.error('Failed to save events', e);
+    }
+  };
+
+  const addOrUpdateEvent = useCallback(async (evt: EventItem) => {
+    const idx = events.findIndex(e => e.id === evt.id);
+    const nowTs = Date.now();
+    const normalized: EventItem = { ...evt, updatedAt: nowTs, createdAt: (evt.createdAt ?? nowTs) } as EventItem;
+    if (idx >= 0) {
+      const next = [...events];
+      next[idx] = normalized;
+      await persistEvents(next);
+    } else {
+      await persistEvents([normalized, ...events]);
+    }
+  }, [events]);
+
+  const deleteEvent = useCallback(async (id: string) => {
+    await persistEvents(events.filter(e => e.id !== id));
+  }, [events]);
+
+  const eventsByDate = useCallback((yyyymmdd: string): EventItem[] => {
+    return events.filter(e => e.date === yyyymmdd).sort((a,b) => {
+      if (a.allDay && !b.allDay) return -1;
+      if (!a.allDay && b.allDay) return 1;
+      return (a.startTime ?? '').localeCompare(b.startTime ?? '');
+    });
+  }, [events]);
+
   return useMemo(() => ({
     settings,
     saveSettings,
@@ -496,5 +570,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
     validateOpenAIKey,
     validateInjectUrl,
     generateQuoteFromWord,
-  }), [settings, saveSettings, updateForce, isLoading, currentStack, showMagicianPanel, toggleMagicianPanel, peekOverlay, showPeek, forceState, getForcedMonthDate, getValidForcedDayFor, armAndSnap, lockForceDay, armSnapAndLock, cancelForce, panic, setOverridesForMonth, removeOverridesForMonth, lastLibraryPick, updateQuote, validateOpenAIKey, validateInjectUrl, generateQuoteFromWord]);
+    // Events API
+    events,
+    addOrUpdateEvent,
+    deleteEvent,
+    eventsByDate,
+  }), [settings, saveSettings, updateForce, isLoading, currentStack, showMagicianPanel, toggleMagicianPanel, peekOverlay, showPeek, forceState, getForcedMonthDate, getValidForcedDayFor, armAndSnap, lockForceDay, armSnapAndLock, cancelForce, panic, setOverridesForMonth, removeOverridesForMonth, lastLibraryPick, updateQuote, validateOpenAIKey, validateInjectUrl, generateQuoteFromWord, events, addOrUpdateEvent, deleteEvent, eventsByDate]);
 });
