@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, PanResponder, GestureResponderEvent } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
+import { getHolidaysMapForMonth } from '@/constants/holidays';
 import { dateToWeekCard, getFocusWord, weekNumberToRange } from '@/utils/mapping';
 import { getZodiacSign } from '@/constants/zodiac';
 
@@ -46,6 +47,8 @@ export default function DayDetailScreen() {
     }
   };
 
+  const holidaysForDay = settings.holidaysEnabled ? (getHolidaysMapForMonth(date.getFullYear(), date.getMonth(), settings.holidayCountry)[date.getDate()] ?? []) : [];
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -90,6 +93,15 @@ export default function DayDetailScreen() {
           <Text style={styles.readingTitle}>Daily Reading</Text>
           <Text style={styles.readingText}>{zodiacSign.reading}</Text>
         </View>
+
+        {holidaysForDay.length > 0 && (
+          <View style={styles.holidayCard}>
+            <Text style={styles.holidayTitle}>Holiday</Text>
+            {holidaysForDay.map((h, i) => (
+              <Text key={`${h}-${i}`} style={styles.holidayText}>{h}</Text>
+            ))}
+          </View>
+        )}
 
         <View style={styles.focusCard}>
           <Text style={styles.focusLabel}>Focus Word</Text>
@@ -224,6 +236,29 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: 24,
     letterSpacing: 0.3,
+  },
+  holidayCard: {
+    marginHorizontal: 24,
+    padding: 16,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FFD6D6',
+  },
+  holidayTitle: {
+    fontSize: 12,
+    color: '#B00020',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  holidayText: {
+    fontSize: 16,
+    color: '#8E0000',
+    fontWeight: '600',
+    marginTop: 2,
   },
   focusCard: {
     marginHorizontal: 24,

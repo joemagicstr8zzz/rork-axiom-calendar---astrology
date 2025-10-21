@@ -1,8 +1,9 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Platform, PanResponder, GestureResponderEvent } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Search as SearchIcon, Settings as SettingsIcon } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
+import { getHolidaysMapForMonth } from '@/constants/holidays';
 import { dateToCard, dateToWeekCard, getFocusWord, startOfWeek } from '@/utils/mapping';
 
 import * as Haptics from 'expo-haptics';
@@ -164,6 +165,16 @@ export default function CalendarScreen() {
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
+
+  const holidaysMap = useMemo(() => {
+    if (!settings.holidaysEnabled) return {} as Record<number, string[]>;
+    try {
+      return getHolidaysMapForMonth(year, month, settings.holidayCountry);
+    } catch (e) {
+      console.log('[Calendar] holidays error', e);
+      return {} as Record<number, string[]>;
+    }
+  }, [year, month, settings.holidaysEnabled, settings.holidayCountry]);
   
   const calendarDays: (number | null)[] = [];
   for (let i = 0; i < firstDay; i++) {
@@ -299,6 +310,13 @@ export default function CalendarScreen() {
                       )?.label}
                     </Text>
                   )}
+                  {settings.holidaysEnabled && holidaysMap[day] && (
+                    <View style={styles.holidayPill} testID={`holiday-pill-${day}`}>
+                      <Text style={styles.holidayPillText} numberOfLines={1}>
+                        {holidaysMap[day][0]}
+                      </Text>
+                    </View>
+                  )}
                 </>
               )}
             </TouchableOpacity>
@@ -417,6 +435,19 @@ const styles = StyleSheet.create({
   },
   selectedText: {
     color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  holidayPill: {
+    marginTop: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: '#FFE8E8',
+    borderRadius: 8,
+    maxWidth: '100%',
+  },
+  holidayPillText: {
+    fontSize: 9,
+    color: '#B00020',
     fontWeight: '700',
   },
   rehearsalText: {

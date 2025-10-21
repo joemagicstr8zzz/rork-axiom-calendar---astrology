@@ -275,6 +275,39 @@ export default function SettingsScreen() {
 
         <View style={styles.section}>
           <View style={[styles.sectionHeader, { backgroundColor: '#00B4FF' }]}> 
+            <Text style={styles.sectionTitle}>Holidays</Text>
+          </View>
+          <View style={styles.card}>
+            <View style={styles.switchRow}>
+              <View style={styles.switchContent}>
+                <Text style={styles.optionText}>Show Holidays</Text>
+                <Text style={styles.optionSubtext}>Display public holidays on the calendar</Text>
+              </View>
+              <Switch
+                value={settings.holidaysEnabled}
+                onValueChange={(value) => saveSettings({ holidaysEnabled: value })}
+                trackColor={{ false: '#E0E0E0', true: '#007AFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Country</Text>
+            {(['US','UK','CA','AU','DE','FR'] as const).map((code) => (
+              <TouchableOpacity key={code} style={styles.option} onPress={() => saveSettings({ holidayCountry: code })}>
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionText}>{code}</Text>
+                  <Text style={styles.optionSubtext}>{code === 'US' ? 'United States (default)' : 'Holidays dataset'}</Text>
+                </View>
+                <View style={[styles.radio, settings.holidayCountry === code && styles.radioSelected]} />
+              </TouchableOpacity>
+            ))}
+
+            <Text style={{ fontSize: 12, color: '#999', marginTop: 8 }}>Note: Full rules included for US. Other countries will appear as we add profiles.</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={[styles.sectionHeader, { backgroundColor: '#00B4FF' }]}> 
             <Text style={styles.sectionTitle}>Help & Guide</Text>
           </View>
           <View style={styles.card}>

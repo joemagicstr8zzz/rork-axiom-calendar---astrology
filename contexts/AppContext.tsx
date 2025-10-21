@@ -6,6 +6,8 @@ import { StackCard, StackType, getStackByType } from '@/constants/stacks';
 export type WeekStandard = 'iso' | 'us' | 'custom';
 export type Week53Handling = 'joker' | 'merge52' | 'wrap1';
 
+export type HolidayCountry = 'US' | 'UK' | 'CA' | 'AU' | 'DE' | 'FR';
+
 type ForceMonthMode = 'relative' | 'absolute';
 interface ForceSettings {
   monthMode: ForceMonthMode;
@@ -34,6 +36,8 @@ interface AppSettings {
   weekStandard: WeekStandard;
   weekStartDay: number;
   week53Handling: Week53Handling;
+  holidaysEnabled: boolean;
+  holidayCountry: HolidayCountry;
   force: ForceSettings;
 }
 
@@ -48,6 +52,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   weekStandard: 'iso',
   weekStartDay: 1,
   week53Handling: 'merge52',
+  holidaysEnabled: true,
+  holidayCountry: 'US',
   force: {
     monthMode: 'relative',
     relativeOffset: 0,
