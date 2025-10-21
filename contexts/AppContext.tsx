@@ -278,14 +278,14 @@ export const [AppProvider, useApp] = createContextHook(() => {
         throw new Error('Malformed JSON');
       }
       const record: QuoteRecord = { text: parsed.text, author: parsed.author, years: typeof parsed.years === 'string' ? parsed.years : null };
-      await updateQuote({ lastQuote: record, lastWord: word, status: 'idle', errorMessage: null });
+      await updateQuote({ lastQuote: record, lastWord: word, status: settings.quote.enabled ? 'listening' : 'idle', errorMessage: null });
       return record;
     } catch (e: any) {
       console.log('[Quote] openai error', e);
       await updateQuote({ status: 'error', errorMessage: e?.message ?? 'Generation failed' });
       return null;
     }
-  }, [settings.quote.openaiApiKey, settings.quote.model, settings.quote.promptTemplate, updateQuote]);
+  }, [settings.quote.openaiApiKey, settings.quote.model, settings.quote.promptTemplate, settings.quote.enabled, updateQuote]);
 
   useEffect(() => {
     if (quoteTimerRef.current) {
@@ -293,9 +293,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       quoteTimerRef.current = null;
     }
     if (!settings.quote.enabled) return;
-    if (settings.quote.status !== 'listening') {
-      void updateQuote({ status: 'listening', errorMessage: null });
-    }
+    if (!settings.quote.injectUrl) return;
     const tick = async () => {
       const word = await fetchInjectWord();
       if (!word) return;
@@ -311,7 +309,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
         quoteTimerRef.current = null;
       }
     };
-  }, [settings.quote.enabled, settings.quote.pollIntervalMs, settings.quote.injectUrl, settings.quote.lastWord, settings.quote.status, fetchInjectWord, generateQuoteFromWord, updateQuote]);
+  }, [settings.quote.enabled, settings.quote.pollIntervalMs, settings.quote.injectUrl, fetchInjectWord, generateQuoteFromWord, settings.quote.lastWord]);
 
   const validateOpenAIKey = useCallback(async (): Promise<{ ok: boolean; message: string }> => {
     const apiKey = settings.quote.openaiApiKey ?? '';

@@ -47,7 +47,7 @@ export default function SettingsScreen() {
             <TextInput
               testID="inject-url-input"
               style={styles.input}
-              placeholder="11.co/_w/#####/selection"
+              placeholder="11z.co/_w/#####/selection"
               placeholderTextColor="#AAA"
               autoCapitalize="none"
               autoCorrect={false}
@@ -70,7 +70,7 @@ export default function SettingsScreen() {
                 style={[styles.smallBtn, styles.btnGhost]}
                 onPress={async () => {
                   if (settings.quote.injectUrl) {
-                    updateQuote({ status: 'listening' });
+                    updateQuote({ status: 'listening', errorMessage: null });
                   }
                 }}
               >
