@@ -397,11 +397,7 @@ export default function CalendarScreen() {
                     </Text>
                   )}
                   {settings.holidaysEnabled && holidaysMap[day] && (
-                    <View style={styles.holidayPill} testID={`holiday-pill-${day}`}>
-                      <Text style={styles.holidayPillText} numberOfLines={1}>
-                        {holidaysMap[day][0]}
-                      </Text>
-                    </View>
+                    <View style={styles.holidayBar} testID={`holiday-bar-${day}`} />
                   )}
                 </>
               )}
@@ -523,18 +519,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
   },
-  holidayPill: {
-    marginTop: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    backgroundColor: '#FFE8E8',
-    borderRadius: 8,
-    maxWidth: '100%',
-  },
-  holidayPillText: {
-    fontSize: 9,
-    color: '#B00020',
-    fontWeight: '700',
+  holidayBar: {
+    position: 'absolute',
+    left: 8,
+    right: 8,
+    bottom: 6,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#FF6B6B',
   },
   rehearsalText: {
     fontSize: 8,
