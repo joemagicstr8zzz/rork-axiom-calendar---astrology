@@ -1,6 +1,6 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { StackCard, StackType, getStackByType } from '@/constants/stacks';
 
 export type WeekStandard = 'iso' | 'us' | 'custom';
@@ -58,6 +58,26 @@ interface ForceRuntimeState {
 
 export type LibraryPick = { type: OverrideItemType; id: string; label: string; value: string | number; color?: string; emoji?: string } | null;
 
+interface QuoteRecord {
+  text: string;
+  author: string;
+  years?: string | null;
+}
+
+interface QuoteSettings {
+  enabled: boolean;
+  openaiApiKey: string | null;
+  injectUrl: string | null;
+  promptTemplate: string; // must include [WORD]
+  model: string;
+  displayPosition: 'belowCalendar' | 'belowFocusBar';
+  pollIntervalMs: number;
+  lastWord: string | null;
+  lastQuote: QuoteRecord | null;
+  status: 'idle' | 'listening' | 'generating' | 'error';
+  errorMessage?: string | null;
+}
+
 interface AppSettings {
   stackType: StackType;
   customStack: StackCard[];
@@ -71,6 +91,7 @@ interface AppSettings {
   holidaysEnabled: boolean;
   holidayCountry: HolidayCountry;
   force: ForceSettings;
+  quote: QuoteSettings;
 }
 
 const now = new Date();
@@ -102,6 +123,20 @@ const DEFAULT_SETTINGS: AppSettings = {
     overridesEnabled: false,
     overridesMap: {},
   },
+  quote: {
+    enabled: false,
+    openaiApiKey: null,
+    injectUrl: null,
+    promptTemplate:
+      'Write a short, original inspirational quote about the word [WORD]. Also include a believable author that has said, or would say something about [WORD] and include birth/death years as applicable.',
+    model: 'gpt-4o-mini',
+    displayPosition: 'belowCalendar',
+    pollIntervalMs: 30000,
+    lastWord: null,
+    lastQuote: null,
+    status: 'idle',
+    errorMessage: null,
+  },
 };
 
 export const [AppProvider, useApp] = createContextHook(() => {
@@ -115,6 +150,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     weekNumber?: number | null;
   }>({ visible: false, card: null, weekNumber: null });
   const [forceState, setForceState] = useState<ForceRuntimeState>({ snapped: false, locked: false, lastTriggerAt: null, panicUntil: null });
+  const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     loadSettings();
@@ -156,6 +192,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }
   }, [settings]);
 
+  const updateQuote = useCallback(async (partial: Partial<QuoteSettings>) => {
+    const updated = { ...settings, quote: { ...settings.quote, ...partial } } as AppSettings;
+    setSettings(updated);
+    try {
+      await AsyncStorage.setItem('axiom_settings', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to save quote settings:', e);
+    }
+  }, [settings]);
+
   const updateForce = useCallback(async (partial: Partial<ForceSettings>) => {
     const updated = { ...settings, force: { ...settings.force, ...partial } } as AppSettings;
     setSettings(updated);
@@ -165,6 +211,127 @@ export const [AppProvider, useApp] = createContextHook(() => {
       console.error('Failed to save force settings:', e);
     }
   }, [settings]);
+
+  const fetchInjectWord = useCallback(async (): Promise<string | null> => {
+    try {
+      const url = settings.quote.injectUrl ?? '';
+      if (!url) return null;
+      const res = await fetch(url, { method: 'GET' });
+      if (!res.ok) throw new Error(`Inject API ${res.status}`);
+      const json = (await res.json()) as { value?: unknown };
+      const word = typeof json?.value === 'string' ? json.value : null;
+      return word;
+    } catch (e) {
+      console.log('[Quote] inject fetch error', e);
+      return null;
+    }
+  }, [settings.quote.injectUrl]);
+
+  const generateQuoteFromWord = useCallback(async (word: string): Promise<QuoteRecord | null> => {
+    const apiKey = settings.quote.openaiApiKey ?? '';
+    const model = settings.quote.model ?? 'gpt-4o-mini';
+    if (!apiKey) {
+      await updateQuote({ status: 'error', errorMessage: 'Missing OpenAI API key' });
+      return null;
+    }
+    try {
+      await updateQuote({ status: 'generating', errorMessage: null });
+      const prompt = settings.quote.promptTemplate.replace(/\[WORD\]/g, word);
+      const body = {
+        model,
+        messages: [
+          { role: 'system', content: 'You generate JSON only. Respond strictly with a JSON object: {"text":"quote","author":"Name","years":"(1900–1980)"} years optional.' },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.8,
+        max_tokens: 200,
+      } as const;
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`OpenAI ${res.status}`);
+      const data = await res.json() as any;
+      const content: string | undefined = data?.choices?.[0]?.message?.content;
+      if (!content) throw new Error('Empty response');
+      let parsed: any = null;
+      try {
+        parsed = JSON.parse(content);
+      } catch {
+        const match = content.match(/\{[\s\S]*\}/);
+        if (match) {
+          parsed = JSON.parse(match[0]);
+        }
+      }
+      if (!parsed || typeof parsed.text !== 'string' || typeof parsed.author !== 'string') {
+        throw new Error('Malformed JSON');
+      }
+      const record: QuoteRecord = { text: parsed.text, author: parsed.author, years: typeof parsed.years === 'string' ? parsed.years : null };
+      await updateQuote({ lastQuote: record, lastWord: word, status: 'idle', errorMessage: null });
+      return record;
+    } catch (e: any) {
+      console.log('[Quote] openai error', e);
+      await updateQuote({ status: 'error', errorMessage: e?.message ?? 'Generation failed' });
+      return null;
+    }
+  }, [settings.quote.openaiApiKey, settings.quote.model, settings.quote.promptTemplate, updateQuote]);
+
+  useEffect(() => {
+    if (quoteTimerRef.current) {
+      clearInterval(quoteTimerRef.current);
+      quoteTimerRef.current = null;
+    }
+    if (!settings.quote.enabled) return;
+    updateQuote({ status: 'listening', errorMessage: null });
+    const tick = async () => {
+      const word = await fetchInjectWord();
+      if (!word) return;
+      if (word !== settings.quote.lastWord) {
+        await generateQuoteFromWord(word);
+      }
+    };
+    // immediate tick once
+    tick();
+    quoteTimerRef.current = setInterval(tick, settings.quote.pollIntervalMs);
+    return () => {
+      if (quoteTimerRef.current) {
+        clearInterval(quoteTimerRef.current);
+        quoteTimerRef.current = null;
+      }
+    };
+  }, [settings.quote.enabled, settings.quote.pollIntervalMs, settings.quote.injectUrl, settings.quote.lastWord, fetchInjectWord, generateQuoteFromWord, updateQuote]);
+
+  const validateOpenAIKey = useCallback(async (): Promise<{ ok: boolean; message: string }> => {
+    const apiKey = settings.quote.openaiApiKey ?? '';
+    if (!apiKey) return { ok: false, message: 'Missing API key' };
+    try {
+      const res = await fetch('https://api.openai.com/v1/models', {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      if (!res.ok) return { ok: false, message: `HTTP ${res.status}` };
+      return { ok: true, message: 'Key valid' };
+    } catch (e: any) {
+      return { ok: false, message: e?.message ?? 'Network error' };
+    }
+  }, [settings.quote.openaiApiKey]);
+
+  const validateInjectUrl = useCallback(async (): Promise<{ ok: boolean; message: string }> => {
+    const url = settings.quote.injectUrl ?? '';
+    if (!url) return { ok: false, message: 'Missing URL' };
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return { ok: false, message: `HTTP ${res.status}` };
+      const json = (await res.json()) as any;
+      if (typeof json?.value === 'string') return { ok: true, message: 'OK' };
+      return { ok: false, message: 'No value field' };
+    } catch (e: any) {
+      return { ok: false, message: e?.message ?? 'Network error' };
+    }
+  }, [settings.quote.injectUrl]);
 
   const currentStack = useMemo(() => {
     if (settings.stackType === 'custom') {
@@ -301,5 +468,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
     removeOverridesForMonth,
     lastLibraryPick,
     setLastLibraryPick,
-  }), [settings, saveSettings, updateForce, isLoading, currentStack, showMagicianPanel, toggleMagicianPanel, peekOverlay, showPeek, forceState, getForcedMonthDate, getValidForcedDayFor, armAndSnap, lockForceDay, armSnapAndLock, cancelForce, panic, setOverridesForMonth, removeOverridesForMonth]);
+    // Quote features
+    updateQuote,
+    validateOpenAIKey,
+    validateInjectUrl,
+    generateQuoteFromWord,
+  }), [settings, saveSettings, updateForce, isLoading, currentStack, showMagicianPanel, toggleMagicianPanel, peekOverlay, showPeek, forceState, getForcedMonthDate, getValidForcedDayFor, armAndSnap, lockForceDay, armSnapAndLock, cancelForce, panic, setOverridesForMonth, removeOverridesForMonth, lastLibraryPick, updateQuote, validateOpenAIKey, validateInjectUrl, generateQuoteFromWord]);
 });

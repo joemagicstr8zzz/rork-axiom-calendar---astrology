@@ -236,6 +236,17 @@ export default function CalendarScreen() {
 
   const selectedFocusWord = selectedDate ? getFocusWord(selectedDate, settings.seed) : null;
 
+  const QuoteCard = useMemo(() => {
+    const q = settings.quote.lastQuote;
+    if (!settings.quote.enabled || !q) return null;
+    return (
+      <View style={styles.quoteCard} testID="quote-card">
+        <Text style={styles.quoteText}>“{q.text}”</Text>
+        <Text style={styles.quoteAuthor}>— {q.author}{q.years ? ` ${q.years}` : ''}</Text>
+      </View>
+    );
+  }, [settings.quote.enabled, settings.quote.lastQuote]);
+
   const screenWidth = Dimensions.get('window').width;
   const daySize = (screenWidth - 48) / 7;
 
@@ -350,12 +361,16 @@ export default function CalendarScreen() {
           ))}
         </View>
 
+        {settings.quote.displayPosition === 'belowCalendar' && QuoteCard}
+
         {selectedFocusWord && (
           <View style={styles.focusBar} testID="focus-bar">
             <Text style={styles.focusLabel}>Focus</Text>
             <Text style={styles.focusWord}>{selectedFocusWord}</Text>
           </View>
         )}
+
+        {settings.quote.displayPosition === 'belowFocusBar' && QuoteCard}
 
         <TouchableOpacity
           style={styles.astrologyButton}
@@ -507,6 +522,30 @@ const styles = StyleSheet.create({
     color: '#111',
     fontWeight: '600',
     letterSpacing: 0.3,
+  },
+  quoteCard: {
+    marginHorizontal: 24,
+    marginTop: 16,
+    padding: 18,
+    backgroundColor: '#111827',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  quoteText: {
+    color: '#F9FAFB',
+    fontSize: 16,
+    lineHeight: 22,
+    letterSpacing: 0.2,
+  },
+  quoteAuthor: {
+    color: '#D1D5DB',
+    marginTop: 8,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   astrologyButton: {
     marginHorizontal: 24,

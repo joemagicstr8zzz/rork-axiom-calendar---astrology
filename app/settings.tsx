@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, TextInput, Platform } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/contexts/AppContext';
 import { StackType } from '@/constants/stacks';
 
 export default function SettingsScreen() {
-  const { settings, saveSettings, updateForce } = useApp();
+  const { settings, saveSettings, updateForce, updateQuote, validateOpenAIKey, validateInjectUrl, generateQuoteFromWord } = useApp();
   const insets = useSafeAreaInsets();
 
   const handleStackChange = (stackType: StackType) => {
@@ -23,6 +23,151 @@ export default function SettingsScreen() {
       />
       
       <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: Math.max(24, insets.bottom + 12) }} showsVerticalScrollIndicator={false}>
+        <View style={styles.section}>
+          <View style={[styles.sectionHeader, { backgroundColor: '#00B4FF' }]}> 
+            <Text style={styles.sectionTitle}>Quote of the Day</Text>
+          </View>
+          <View style={styles.card}>
+            <Text style={styles.helperText}>Displays a secret inspirational quote under the month. It listens to your Inject API for a word and asks OpenAI using your prompt.</Text>
+
+            <View style={styles.switchRow}>
+              <View style={styles.switchContent}>
+                <Text style={styles.optionText}>Enable Quote of the Day</Text>
+                <Text style={styles.optionSubtext}>{settings.quote.status === 'generating' ? 'Generating…' : settings.quote.status === 'listening' ? 'Listening for updates' : settings.quote.errorMessage ? `Error: ${settings.quote.errorMessage}` : 'Idle'}</Text>
+              </View>
+              <Switch
+                value={settings.quote.enabled}
+                onValueChange={(value) => updateQuote({ enabled: value })}
+                trackColor={{ false: '#E0E0E0', true: '#007AFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Inject API URL</Text>
+            <TextInput
+              testID="inject-url-input"
+              style={styles.input}
+              placeholder="https://11z.co/_w/5850/selection"
+              placeholderTextColor="#AAA"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={settings.quote.injectUrl ?? ''}
+              onChangeText={(t) => updateQuote({ injectUrl: t.trim() })}
+            />
+            <View style={styles.rowButtons}>
+              <TouchableOpacity
+                testID="validate-inject"
+                style={[styles.smallBtn, styles.btnPrimary]}
+                onPress={async () => {
+                  const res = await validateInjectUrl();
+                  updateQuote({ errorMessage: res.ok ? null : res.message });
+                }}
+              >
+                <Text style={styles.smallBtnText}>Validate Inject</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="listen-now"
+                style={[styles.smallBtn, styles.btnGhost]}
+                onPress={async () => {
+                  if (settings.quote.injectUrl) {
+                    updateQuote({ status: 'listening' });
+                  }
+                }}
+              >
+                <Text style={[styles.smallBtnText, { color: '#111' }]}>Listen</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>OpenAI API Key</Text>
+            <TextInput
+              testID="openai-key-input"
+              style={styles.input}
+              placeholder="sk-..."
+              placeholderTextColor="#AAA"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={settings.quote.openaiApiKey ?? ''}
+              secureTextEntry={true}
+              onChangeText={(t) => updateQuote({ openaiApiKey: t.trim() })}
+            />
+            <View style={styles.rowButtons}>
+              <TouchableOpacity
+                testID="validate-openai"
+                style={[styles.smallBtn, styles.btnPrimary]}
+                onPress={async () => {
+                  const res = await validateOpenAIKey();
+                  updateQuote({ errorMessage: res.ok ? null : res.message });
+                }}
+              >
+                <Text style={styles.smallBtnText}>Validate Key</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="test-generate"
+                style={[styles.smallBtn, styles.btnGhost]}
+                onPress={async () => {
+                  const word = settings.quote.lastWord ?? 'wonder';
+                  await generateQuoteFromWord(word);
+                }}
+              >
+                <Text style={[styles.smallBtnText, { color: '#111' }]}>Test Generate</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Prompt Template</Text>
+            <TextInput
+              testID="prompt-template-input"
+              style={[styles.input, styles.textarea]}
+              multiline
+              numberOfLines={Platform.OS === 'web' ? undefined : 4}
+              placeholder="Use [WORD] placeholder"
+              placeholderTextColor="#AAA"
+              value={settings.quote.promptTemplate}
+              onChangeText={(t) => updateQuote({ promptTemplate: t })}
+            />
+
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Model</Text>
+            <View style={styles.option}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>{settings.quote.model}</Text>
+                <Text style={styles.optionSubtext}>Tap to cycle</Text>
+              </View>
+              <TouchableOpacity
+                testID="cycle-model"
+                onPress={() => {
+                  const models = ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini'];
+                  const idx = models.indexOf(settings.quote.model);
+                  const next = models[(Math.max(0, idx) + 1) % models.length] as string;
+                  updateQuote({ model: next });
+                }}
+              >
+                <View style={[styles.radio, styles.radioSelected]} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Display</Text>
+            <View style={styles.option}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Position</Text>
+                <Text style={styles.optionSubtext}>{settings.quote.displayPosition}</Text>
+              </View>
+              <View style={{ flexDirection: 'row' }}>
+                {(['belowCalendar','belowFocusBar'] as const).map(p => (
+                  <TouchableOpacity key={p} style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateQuote({ displayPosition: p })}>
+                    <Text style={{ fontWeight: settings.quote.displayPosition === p ? '700' : '400', color: settings.quote.displayPosition === p ? '#007AFF' : '#666' }}>{p}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {settings.quote.lastQuote && (
+              <View style={[styles.previewQuote]}
+                testID="quote-preview">
+                <Text style={styles.previewQuoteText}>“{settings.quote.lastQuote.text}”</Text>
+                <Text style={styles.previewQuoteAuthor}>— {settings.quote.lastQuote.author}{settings.quote.lastQuote.years ? ` ${settings.quote.lastQuote.years}` : ''}</Text>
+              </View>
+            )}
+          </View>
+        </View>
         <View style={styles.section}>
           <View style={[styles.sectionHeader, { backgroundColor: '#00B4FF' }]}> 
             <Text style={styles.sectionTitle}>Week Mapping</Text>
@@ -526,6 +671,41 @@ const styles = StyleSheet.create({
   manageBtn: { backgroundColor: '#111', paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
   manageText: { color: '#fff', fontWeight: '700' },
   helperText: { fontSize: 13, color: '#6B7280', lineHeight: 18, marginBottom: 12 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FAFAFA',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: '#111',
+  },
+  textarea: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  rowButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  smallBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  smallBtnText: { color: '#fff', fontWeight: '700' },
+  btnPrimary: { backgroundColor: '#007AFF' },
+  btnGhost: { backgroundColor: '#EFEFEF' },
+  previewQuote: {
+    marginTop: 16,
+    backgroundColor: '#111',
+    borderRadius: 14,
+    padding: 16,
+  },
+  previewQuoteText: { color: '#fff', fontSize: 16, lineHeight: 22 },
+  previewQuoteAuthor: { color: '#D1D5DB', marginTop: 6, fontWeight: '600' },
   infoSection: {
     marginHorizontal: 24,
     marginTop: 32,
