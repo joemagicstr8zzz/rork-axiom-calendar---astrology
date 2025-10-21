@@ -63,6 +63,8 @@ interface ForceRuntimeState {
   panicUntil: number | null;
 }
 
+export type LibraryPick = { type: OverrideItemType; id: string; label: string; value: string | number; color?: string; emoji?: string } | null;
+
 interface AppSettings {
   stackType: StackType;
   customStack: StackCard[];
@@ -118,6 +120,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 export const [AppProvider, useApp] = createContextHook(() => {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastLibraryPick, setLastLibraryPick] = useState<LibraryPick>(null);
   const [showMagicianPanel, setShowMagicianPanel] = useState(false);
   const [peekOverlay, setPeekOverlay] = useState<{
     visible: boolean;
@@ -295,5 +298,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     panic,
     setOverridesForMonth,
     removeOverridesForMonth,
+    lastLibraryPick,
+    setLastLibraryPick,
   }), [settings, saveSettings, updateForce, isLoading, currentStack, showMagicianPanel, toggleMagicianPanel, peekOverlay, showPeek, forceState, getForcedMonthDate, getValidForcedDayFor, armAndSnap, lockForceDay, armSnapAndLock, cancelForce, panic, setOverridesForMonth, removeOverridesForMonth]);
 });

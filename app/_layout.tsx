@@ -22,6 +22,7 @@ function RootLayoutNav() {
       <Stack.Screen name="stack-editor" />
       <Stack.Screen name="help" />
       <Stack.Screen name="month-overrides" />
+      <Stack.Screen name="visual-libraries" options={{ title: 'Visual Libraries' }} />
     </Stack>
   );
 }
