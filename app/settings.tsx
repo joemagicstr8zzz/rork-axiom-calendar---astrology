@@ -145,6 +145,18 @@ export default function SettingsScreen() {
                 ]}
               />
             </TouchableOpacity>
+
+            <TouchableOpacity
+              testID="edit-custom-stack"
+              accessibilityRole="button"
+              style={[styles.manageBtn, { marginTop: 16 }]}
+              onPress={() => {
+                console.log('[Settings] Edit Custom Stack');
+                router.push('/stack-editor');
+              }}
+            >
+              <Text style={styles.manageText}>Manage Custom Stacks</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -383,6 +395,8 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 16,
   },
+  manageBtn: { backgroundColor: '#111', paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
+  manageText: { color: '#fff', fontWeight: '700' },
   infoSection: {
     marginHorizontal: 24,
     marginTop: 32,

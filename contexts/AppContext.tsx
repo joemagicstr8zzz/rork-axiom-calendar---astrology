@@ -27,6 +27,7 @@ interface ForceRuntimeState {
 interface AppSettings {
   stackType: StackType;
   customStack: StackCard[];
+  selectedCustomStackId?: string | null;
   seed: number;
   peekEnabled: boolean;
   rehearsalMode: boolean;
@@ -40,6 +41,7 @@ const now = new Date();
 const DEFAULT_SETTINGS: AppSettings = {
   stackType: 'mnemonica',
   customStack: [],
+  selectedCustomStackId: null,
   seed: 12345,
   peekEnabled: true,
   rehearsalMode: false,
