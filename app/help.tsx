@@ -28,10 +28,10 @@ export default function HelpScreen() {
 
         <Section title="Quick Setup" testID="help-setup">
           <View style={styles.list}>
-            <Bullet>Open Settings and pick your Stack or create a Custom Stack.</Bullet>
-            <Bullet>Choose Week Mapping (ISO/US/custom start day) if needed.</Bullet>
-            <Bullet>Optionally turn on Holidays. U.S. is default; pick other countries in Settings.</Bullet>
-            <Bullet>Everything else (Force, Peek, Rehearsal, Overrides) starts OFF until you enable it.</Bullet>
+            <Bullet><Text style={styles.liText}>Open Settings and pick your Stack or create a Custom Stack.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Choose Week Mapping (ISO/US/custom start day) if needed.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Optionally turn on Holidays. U.S. is default; pick other countries in Settings.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Everything else (Force, Peek, Rehearsal, Overrides) starts OFF until you enable it.</Text></Bullet>
           </View>
         </Section>
 
@@ -46,21 +46,20 @@ export default function HelpScreen() {
 
         <Section title="Performing: Classic Week Mapping" testID="help-perform-classic">
           <View style={styles.list}>
-            <Bullet>Have a date named. Tap that date. You instantly know the mapped item by week position.</Bullet>
-            <Bullet>Or search a card/item to highlight its week, then let them name a day inside that week.</Bullet>
-            <Bullet>Use Peek (optional) for a private confirmation overlay during practice.</Bullet>
+            <Bullet><Text style={styles.liText}>Have a date named. Tap that date. You instantly know the mapped item by week position.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Or search a card/item to highlight its week, then let them name a day inside that week.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Use Peek (optional) for a private confirmation overlay during practice.</Text></Bullet>
           </View>
         </Section>
 
         <Section title="Performing: Face-Down Swipe Force" testID="help-perform-force">
           <Text style={styles.p}>
-            Lets them swipe while the phone is face-down. On flipping face-up, the calendar snaps to your armed month. With Day Lock ON, any tap opens your chosen day. Public UI stays innocent.
+            Lets them swipe while the phone is face-down. On your signal, the calendar snaps to your armed month. With Day Lock ON, any tap opens your chosen day. Public UI stays innocent.
           </Text>
           <View style={styles.list}>
-            <Bullet>Enable Force Mode in Settings. Set Force Month (Relative or Absolute) and/or Force Day.</Bullet>
-            <Bullet>Accelerometer Force ON: Only triggers when flipped face-down → face-up within the window.</Bullet>
-            <Bullet>Manual Snap: If accelerometer is off/unavailable, use long-press header or remote/gesture to snap.</Bullet>
-            <Bullet>Day Lock: With Force Day active, any tap in scope opens your forced date; the tapped tile still flashes first.</Bullet>
+            <Bullet><Text style={styles.liText}>Enable Force Mode in Settings. Set Force Month (Relative or Absolute) and/or Force Day.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Trigger options: long-press the month header, keyboard arrows (web), or two-finger swipe gestures.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Day Lock: With Force Day active, any tap in scope opens your forced date; the tapped tile still flashes first.</Text></Bullet>
           </View>
         </Section>
 
@@ -69,10 +68,10 @@ export default function HelpScreen() {
             Replace normal week mapping for a single month. Define exactly what each day shows: label plus one or more items (card, ESP, color, number, word, zodiac, etc.). Choose which item appears first.
           </Text>
           <View style={styles.list}>
-            <Bullet>Enable Overrides, pick a YYYY-MM, then edit Day 1..28/29/30/31.</Bullet>
-            <Bullet>Each day has a public label (neutral) and one or more secret items. Choose a default item.</Bullet>
-            <Bullet>Import/Export JSON/CSV to back up or share a month profile.</Bullet>
-            <Bullet>Precedence: If overrides exist for that month, they replace Week → Item for Day Detail.</Bullet>
+            <Bullet><Text style={styles.liText}>Enable Overrides, pick a YYYY-MM, then edit Day 1..28/29/30/31.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Each day has a public label (neutral) and one or more secret items. Choose a default item.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Import/Export JSON/CSV to back up or share a month profile.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Precedence: If overrides exist for that month, they replace Week → Item for Day Detail.</Text></Bullet>
           </View>
         </Section>
 
@@ -81,9 +80,9 @@ export default function HelpScreen() {
             Create your own 52-item stack or alternate profiles. Reorder items, name the list, and save it. New stacks can be used wherever a stack/profile is referenced.
           </Text>
           <View style={styles.list}>
-            <Bullet>Start a new stack from Settings → Custom Lists/Stacks.</Bullet>
-            <Bullet>Drag items to reorder. You can reset to brand-new-deck order when creating a deck-based list.</Bullet>
-            <Bullet>Save to make it available across the app.</Bullet>
+            <Bullet><Text style={styles.liText}>Start a new stack from Settings → Custom Lists/Stacks.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Drag items to reorder. You can reset to brand-new-deck order when creating a deck-based list.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Save to make it available across the app.</Text></Bullet>
           </View>
         </Section>
 
@@ -92,52 +91,51 @@ export default function HelpScreen() {
             When enabled, holiday days show slim colored bars along the bottom of the date cell. Multiple holidays stack as multi‑color bars. Tapping the day opens Day Detail; the holiday names appear there.
           </Text>
           <View style={styles.list}>
-            <Bullet>Default country: U.S. Change or add countries in Settings.</Bullet>
-            <Bullet>Bars are visual; they do not shift alignment or change the date typography.</Bullet>
+            <Bullet><Text style={styles.liText}>Default country: U.S. Change or add countries in Settings.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Bars are visual; they do not shift alignment or change the date typography.</Text></Bullet>
           </View>
         </Section>
 
         <Section title="Relationships between settings" testID="help-relations">
           <View style={styles.list}>
-            <Bullet>Force Month/Day is independent of Overrides. If both are ON, the force controls navigation/opening; Overrides control what appears inside Day Detail.</Bullet>
-            <Bullet>Rehearsal and Peek are visual aids. They never change public content.</Bullet>
-            <Bullet>Holiday bars are purely decorative signals; they do not affect forces or overrides.</Bullet>
+            <Bullet><Text style={styles.liText}>Force Month/Day is independent of Overrides. If both are ON, the force controls navigation/opening; Overrides control what appears inside Day Detail.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Rehearsal and Peek are visual aids. They never change public content.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Holiday bars are purely decorative signals; they do not affect forces or overrides.</Text></Bullet>
           </View>
         </Section>
 
         <Section title="Step-by-step: A full force routine" testID="help-routine">
           <View style={styles.list}>
-            <Bullet>In Settings: Enable Force Mode. Set Force Month (e.g., +1) and Force Day (e.g., 14). Turn ON Accelerometer Force.</Bullet>
-            <Bullet>Optionally enable a Month Override for that month so Day 14 shows the exact item you want.</Bullet>
-            <Bullet>Hand the phone face-down. Ask them to freely swipe. After a moment, have them flip it face-up.</Bullet>
-            <Bullet>The calendar glides to your month. Ask them to tap any date. The app opens Day 14’s detail. Reveal cleanly.</Bullet>
+            <Bullet><Text style={styles.liText}>In Settings: Enable Force Mode. Set Force Month (e.g., +1) and Force Day (e.g., 14).</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Optionally enable a Month Override for that month so Day 14 shows the exact item you want.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Hand the phone face-down. Ask them to freely swipe. On your cue, long‑press the month header or use your gesture.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>The calendar glides to your month. Ask them to tap any date. The app opens Day 14’s detail. Reveal cleanly.</Text></Bullet>
           </View>
         </Section>
 
         <Section title="Magician’s notes" testID="help-notes">
           <View style={styles.list}>
-            <Bullet>Keep public copy neutral. Avoid magic terms. Let the visuals sell normalcy.</Bullet>
-            <Bullet>Use subtle confirmations: a private haptic or a tiny header dot indicates the force is armed.</Bullet>
-            <Bullet>For Month Overrides, prepare domain lists in advance (cards, ESP, colors, numbers, words). The editor shows names so you always know what you’re choosing.</Bullet>
+            <Bullet><Text style={styles.liText}>Keep public copy neutral. Avoid magic terms. Let the visuals sell normalcy.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Use subtle confirmations: a private haptic or a tiny header dot indicates the force is armed.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>For Month Overrides, prepare domain lists in advance (cards, ESP, colors, numbers, words). The editor shows names so you always know what you’re choosing.</Text></Bullet>
           </View>
         </Section>
 
         <Section title="Troubleshooting" testID="help-troubleshooting">
           <View style={styles.list}>
-            <Bullet>Accelerometer error when toggling: ensure Accelerometer Force is OFF on web. On mobile, if sensors are unavailable, the app falls back to manual snap/gestures.</Bullet>
-            <Bullet>Force Day invalid (e.g., 31 on February): choose fallback policy in Settings (nearest valid or block arming).</Bullet>
-            <Bullet>Overrides editor crash: verify the selected month is valid and items have supported types. If a list is empty or malformed, reload and re‑import JSON/CSV.</Bullet>
-            <Bullet>Week mismatch: verify Week Mapping (ISO/US) and the chosen start day.</Bullet>
-            <Bullet>Stuck state or repeated triggers: use Panic (vol up+down) or toggle Force Mode OFF/ON to reset; debounce prevents rapid re‑triggers.</Bullet>
+            <Bullet><Text style={styles.liText}>Force Day invalid (e.g., 31 on February): choose fallback policy in Settings (nearest valid or block arming).</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Overrides editor crash: verify the selected month is valid and items have supported types. If a list is empty or malformed, reload and re‑import JSON/CSV.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Week mismatch: verify Week Mapping (ISO/US) and the chosen start day.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Stuck state or repeated triggers: toggle Force Mode OFF/ON to reset; debounce prevents rapid re‑triggers.</Text></Bullet>
           </View>
         </Section>
 
         <Section title="Glossary" testID="help-glossary">
           <View style={styles.list}>
-            <Bullet>Force Month: Preselect which month the calendar will land on when armed.</Bullet>
-            <Bullet>Force Day (Day Lock): Preselect which day’s detail opens on the next tap.</Bullet>
-            <Bullet>Overrides: A month‑specific map defining items per day that replace normal week mapping.</Bullet>
-            <Bullet>Peek: A private overlay that briefly confirms mapping; never appears publicly.</Bullet>
+            <Bullet><Text style={styles.liText}>Force Month: Preselect which month the calendar will land on when armed.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Force Day (Day Lock): Preselect which day’s detail opens on the next tap.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Overrides: A month‑specific map defining items per day that replace normal week mapping.</Text></Bullet>
+            <Bullet><Text style={styles.liText}>Peek: A private overlay that briefly confirms mapping; never appears publicly.</Text></Bullet>
           </View>
         </Section>
 
@@ -162,7 +160,7 @@ function Bullet({ children }: { children: React.ReactNode }) {
   return (
     <View style={styles.li}>
       <View style={styles.bullet} />
-      <Text style={styles.liText}>{children}</Text>
+      {children}
     </View>
   );
 }

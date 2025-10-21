@@ -13,7 +13,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}> 
       <Stack.Screen
         options={{
           title: 'Magician Panel',
@@ -211,7 +211,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Force Mode</Text>
           </View>
           <View style={styles.card}>
-            <Text style={styles.helperText}>Force Mode lets you secretly control which month/day opens. Month snap and Day Lock can run together or separately. Accelerometer and gesture/remote triggers are available. Turn Force Mode ON first; then configure Month/Day and triggers.</Text>
+            <Text style={styles.helperText}>Force Mode lets you secretly control which month/day opens. Month snap and Day Lock can run together or separately. Use long-press on the month header, keyboard arrows, or two-finger swipe gestures to run forces.</Text>
             <View style={styles.switchRow}>
               <View style={styles.switchContent}>
                 <Text style={styles.optionText}>Enable Force Mode</Text>
@@ -295,77 +295,6 @@ export default function SettingsScreen() {
                     <Text style={{ fontWeight: settings.force.fallbackPolicy === p ? '700' : '400', color: settings.force.fallbackPolicy === p ? '#007AFF' : '#666' }}>{p}</Text>
                   </TouchableOpacity>
                 ))}
-              </View>
-            </View>
-
-            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Apply Force When</Text>
-            <View style={styles.option}>
-              <View style={styles.optionContent}>
-                <Text style={styles.optionText}>Trigger</Text>
-                <Text style={styles.optionSubtext}>Accelerometer flip or manual snap</Text>
-              </View>
-              <View style={{ flexDirection: 'row' }}>
-                {(['accelerometer','manual','either'] as const).map(k => (
-                  <TouchableOpacity key={k} style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ applyWhen: k })}>
-                    <Text style={{ fontWeight: settings.force.applyWhen === k ? '700' : '400', color: settings.force.applyWhen === k ? '#007AFF' : '#666' }}>{k}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Accelerometer Force</Text>
-            <View style={styles.switchRow}>
-              <View style={styles.switchContent}>
-                <Text style={styles.optionText}>Enable Accel</Text>
-                <Text style={styles.optionSubtext}>Face-down → up flip to snap</Text>
-              </View>
-              <Switch
-                value={settings.force.accelerometerEnabled}
-                onValueChange={(value) => updateForce({ accelerometerEnabled: value })}
-                trackColor={{ false: '#E0E0E0', true: '#007AFF' }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
-            <View style={styles.option}>
-              <View style={styles.optionContent}>
-                <Text style={styles.optionText}>Face-down angle</Text>
-                <Text style={styles.optionSubtext}>≥ {settings.force.faceDownAngleDeg}°</Text>
-              </View>
-              <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ faceDownAngleDeg: Math.max(120, settings.force.faceDownAngleDeg - 5) })}>
-                  <Text style={{ fontSize: 18 }}>−</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ faceDownAngleDeg: Math.min(180, settings.force.faceDownAngleDeg + 5) })}>
-                  <Text style={{ fontSize: 18 }}>+</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.option}>
-              <View style={styles.optionContent}>
-                <Text style={styles.optionText}>Stationary window</Text>
-                <Text style={styles.optionSubtext}>{settings.force.stationaryMs} ms</Text>
-              </View>
-              <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ stationaryMs: Math.max(300, settings.force.stationaryMs - 50) })}>
-                  <Text style={{ fontSize: 18 }}>−</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ stationaryMs: Math.min(800, settings.force.stationaryMs + 50) })}>
-                  <Text style={{ fontSize: 18 }}>+</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.option}>
-              <View style={styles.optionContent}>
-                <Text style={styles.optionText}>Flip window</Text>
-                <Text style={styles.optionSubtext}>{settings.force.flipWindowMs} ms</Text>
-              </View>
-              <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ flipWindowMs: Math.max(1500, settings.force.flipWindowMs - 250) })}>
-                  <Text style={{ fontSize: 18 }}>−</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ flipWindowMs: Math.min(8000, settings.force.flipWindowMs + 250) })}>
-                  <Text style={{ fontSize: 18 }}>+</Text>
-                </TouchableOpacity>
               </View>
             </View>
 

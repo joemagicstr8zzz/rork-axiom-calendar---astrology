@@ -9,7 +9,6 @@ export type Week53Handling = 'joker' | 'merge52' | 'wrap1';
 export type HolidayCountry = 'US' | 'UK' | 'CA' | 'AU' | 'DE' | 'FR';
 
 export type ForceMonthMode = 'off' | 'relative' | 'absolute';
-export type ApplyForceWhen = 'accelerometer' | 'manual' | 'either';
 export type RemapScope = 'forcedMonthOnly' | 'anyVisible';
 export type FallbackPolicy = 'nearest' | 'block';
 
@@ -42,12 +41,6 @@ interface ForceSettings {
   forceDayEnabled: boolean;
   forceDay: number; // 1..31
   fallbackPolicy: FallbackPolicy;
-  applyWhen: ApplyForceWhen;
-  accelerometerEnabled: boolean;
-  faceDownAngleDeg: number; // >= 150
-  stationaryMs: number; // 300-600
-  flipWindowMs: number; // 2000-6000
-  debounceMs: number; // >= 2000 for flips
   tapRemapMode: 'stealth' | 'honest';
   remapScope: RemapScope;
   cancelLockOnBack: boolean;
@@ -102,12 +95,6 @@ const DEFAULT_SETTINGS: AppSettings = {
     forceDayEnabled: false,
     forceDay: 1,
     fallbackPolicy: 'nearest',
-    applyWhen: 'accelerometer',
-    accelerometerEnabled: false,
-    faceDownAngleDeg: 150,
-    stationaryMs: 400,
-    flipWindowMs: 4000,
-    debounceMs: 2000,
     tapRemapMode: 'stealth',
     remapScope: 'forcedMonthOnly',
     cancelLockOnBack: true,
@@ -221,28 +208,28 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const armAndSnap = useCallback(() => {
     if (!settings.force.enabled) return { ok: false } as const;
     const ts = Date.now();
-    if (!debounceOk(ts, settings.force.debounceMs)) return { ok: false } as const;
+    if (!debounceOk(ts, 2000)) return { ok: false } as const;
     setForceState(prev => ({ ...prev, snapped: true }));
     markTrigger(ts);
     return { ok: true } as const;
-  }, [settings.force.enabled, settings.force.debounceMs, forceState.lastTriggerAt, forceState.panicUntil]);
+  }, [settings.force.enabled, forceState.lastTriggerAt, forceState.panicUntil]);
 
   const lockForceDay = useCallback(() => {
     if (!settings.force.enabled || !settings.force.forceDayEnabled) return { ok: false } as const;
     const ts = Date.now();
-    if (!debounceOk(ts, settings.force.debounceMs)) return { ok: false } as const;
+    if (!debounceOk(ts, 2000)) return { ok: false } as const;
     setForceState(prev => ({ ...prev, locked: true }));
     markTrigger(ts);
     return { ok: true } as const;
-  }, [settings.force.enabled, settings.force.forceDayEnabled, settings.force.debounceMs, forceState.lastTriggerAt, forceState.panicUntil]);
+  }, [settings.force.enabled, settings.force.forceDayEnabled, forceState.lastTriggerAt, forceState.panicUntil]);
 
   const armSnapAndLock = useCallback(() => {
     if (!settings.force.enabled) return { ok: false } as const;
     const ts = Date.now();
-    if (!debounceOk(ts, settings.force.debounceMs)) return { ok: false } as const;
+    if (!debounceOk(ts, 2000)) return { ok: false } as const;
     setForceState({ snapped: true, locked: !!settings.force.forceDayEnabled, lastTriggerAt: ts, panicUntil: null });
     return { ok: true } as const;
-  }, [settings.force.enabled, settings.force.forceDayEnabled, settings.force.debounceMs, forceState.lastTriggerAt, forceState.panicUntil]);
+  }, [settings.force.enabled, settings.force.forceDayEnabled, forceState.lastTriggerAt, forceState.panicUntil]);
 
   const cancelForce = useCallback(() => {
     const ts = Date.now();
