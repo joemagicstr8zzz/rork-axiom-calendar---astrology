@@ -295,13 +295,15 @@ const styles = StyleSheet.create({
   overrideItemsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    marginTop: 8,
   },
   overrideChip: {
     backgroundColor: '#F1F8FF',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
+    marginRight: 8,
+    marginBottom: 8,
   },
   overrideChipText: {
     color: '#007AFF',

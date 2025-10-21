@@ -137,14 +137,14 @@ export default function MonthOverridesEditorScreen() {
               />
             </View>
             <View style={styles.itemRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {typeOptions.map((t) => (
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+                {typeOptions.map((t, idx) => (
                   <TouchableOpacity key={`${d.day}-${t}`} onPress={() => {
                     const next = { ...local } as MonthOverrides;
                     const cur = next.days.find(dd => dd.day === d.day)!;
                     cur.items = [{ type: t, value: cur.items[0]?.value ?? '' }];
                     setLocal({ ...next });
-                  }} style={[styles.typeChip, (local.days.find(dd => dd.day === d.day)?.items[0]?.type === t) && styles.typeChipActive]}>
+                  }} style={[styles.typeChip, (local.days.find(dd => dd.day === d.day)?.items[0]?.type === t) && styles.typeChipActive, { marginRight: 6, marginBottom: 6 }]}>
                     <Text style={[styles.typeText, (local.days.find(dd => dd.day === d.day)?.items[0]?.type === t) && { color: '#fff' }]}>{t}</Text>
                   </TouchableOpacity>
                 ))}
@@ -171,7 +171,7 @@ export default function MonthOverridesEditorScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
-  toolbar: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, gap: 8 },
+  toolbar: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontSize: 20, fontWeight: '800', color: '#111' },
   subTitle: { fontSize: 16, fontWeight: '700', color: '#333' },
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   dayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   dayTitle: { fontSize: 16, fontWeight: '800', color: '#111' },
   input: { flex: 1, borderWidth: 1, borderColor: '#E6E6E6', borderRadius: 10, paddingHorizontal: 10, paddingVertical: Platform.OS === 'web' ? 10 : 8, backgroundColor: '#fff', marginLeft: 10 },
-  itemRow: { gap: 8 },
+  itemRow: { marginTop: 8 },
   typeChip: { backgroundColor: '#EFEFEF', paddingHorizontal: 8, paddingVertical: 6, borderRadius: 999, marginRight: 6, marginBottom: 6 },
   typeChipActive: { backgroundColor: '#007AFF' },
   typeText: { color: '#111', fontSize: 12, fontWeight: '700' },
