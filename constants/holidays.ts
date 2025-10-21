@@ -7,6 +7,32 @@ function formatDate(y: number, m: number, d: number): string {
   return `${y}-${mm}-${dd}`;
 }
 
+const PALETTE = ['#FF6B6B', '#00C2FF', '#34D399', '#F59E0B', '#A78BFA', '#F472B6', '#60A5FA', '#F97316'] as const;
+const HOLIDAY_COLOR_MAP: Record<string, string> = {
+  "New Year's Day": '#00C2FF',
+  'Martin Luther King Jr. Day': '#7C3AED',
+  "Presidents’ Day": '#34D399',
+  'Memorial Day': '#60A5FA',
+  'Juneteenth': '#16A34A',
+  'Independence Day': '#EF4444',
+  'Labor Day': '#F59E0B',
+  'Columbus Day': '#A78BFA',
+  'Veterans Day': '#0EA5E9',
+  'Thanksgiving Day': '#F97316',
+  'Christmas Day': '#22C55E',
+};
+
+function hashColorKey(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return PALETTE[h % PALETTE.length];
+}
+
+export function getHolidayColor(name: string): string {
+  const base = name.replace(' (Observed)', '');
+  return HOLIDAY_COLOR_MAP[base] ?? hashColorKey(base);
+}
+
 function nthWeekdayOfMonth(year: number, monthIndex: number, weekday: number, nth: number): Date {
   const first = new Date(year, monthIndex, 1);
   const firstWd = first.getDay();

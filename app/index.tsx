@@ -3,7 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Search as SearchIcon, Settings as SettingsIcon } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
-import { getHolidaysMapForMonth } from '@/constants/holidays';
+import { getHolidaysMapForMonth, getHolidayColor } from '@/constants/holidays';
 import { dateToCard, dateToWeekCard, getFocusWord, startOfWeek } from '@/utils/mapping';
 
 import * as Haptics from 'expo-haptics';
@@ -396,8 +396,16 @@ export default function CalendarScreen() {
                       )?.label}
                     </Text>
                   )}
-                  {settings.holidaysEnabled && holidaysMap[day] && (
-                    <View style={styles.holidayBar} testID={`holiday-bar-${day}`} />
+                  {settings.holidaysEnabled && holidaysMap[day] && holidaysMap[day].length > 0 && (
+                    <View style={styles.holidayBarsContainer} pointerEvents="none">
+                      {holidaysMap[day].slice(0, 4).map((h, idx) => (
+                        <View
+                          key={`${day}-h-${idx}`}
+                          style={[styles.holidayBarSegment, { backgroundColor: getHolidayColor(h), marginTop: idx === 0 ? 0 : 2 }]}
+                          testID={`holiday-bar-${day}-${idx}`}
+                        />
+                      ))}
+                    </View>
                   )}
                 </>
               )}
@@ -519,14 +527,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
   },
-  holidayBar: {
+  holidayBarsContainer: {
     position: 'absolute',
     left: 8,
     right: 8,
     bottom: 6,
-    height: 4,
+    flexDirection: 'column',
+    alignItems: 'stretch',
+  },
+  holidayBarSegment: {
+    height: 3,
     borderRadius: 2,
-    backgroundColor: '#FF6B6B',
   },
   rehearsalText: {
     fontSize: 8,
