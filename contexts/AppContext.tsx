@@ -212,9 +212,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }
   }, [settings]);
 
+  const normalizeInjectUrl = (raw: string | null | undefined): string | null => {
+    const p = (raw ?? '').trim();
+    if (!p) return null;
+    if (p.startsWith('http://') || p.startsWith('https://')) return p;
+    return `https://${p}`;
+  };
+
   const fetchInjectWord = useCallback(async (): Promise<string | null> => {
     try {
-      const url = settings.quote.injectUrl ?? '';
+      const url = normalizeInjectUrl(settings.quote.injectUrl);
       if (!url) return null;
       const res = await fetch(url, { method: 'GET' });
       if (!res.ok) throw new Error(`Inject API ${res.status}`);
@@ -286,7 +293,9 @@ export const [AppProvider, useApp] = createContextHook(() => {
       quoteTimerRef.current = null;
     }
     if (!settings.quote.enabled) return;
-    updateQuote({ status: 'listening', errorMessage: null });
+    if (settings.quote.status !== 'listening') {
+      void updateQuote({ status: 'listening', errorMessage: null });
+    }
     const tick = async () => {
       const word = await fetchInjectWord();
       if (!word) return;
@@ -294,7 +303,6 @@ export const [AppProvider, useApp] = createContextHook(() => {
         await generateQuoteFromWord(word);
       }
     };
-    // immediate tick once
     tick();
     quoteTimerRef.current = setInterval(tick, settings.quote.pollIntervalMs);
     return () => {
@@ -303,7 +311,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
         quoteTimerRef.current = null;
       }
     };
-  }, [settings.quote.enabled, settings.quote.pollIntervalMs, settings.quote.injectUrl, settings.quote.lastWord, fetchInjectWord, generateQuoteFromWord, updateQuote]);
+  }, [settings.quote.enabled, settings.quote.pollIntervalMs, settings.quote.injectUrl, settings.quote.lastWord, settings.quote.status, fetchInjectWord, generateQuoteFromWord, updateQuote]);
 
   const validateOpenAIKey = useCallback(async (): Promise<{ ok: boolean; message: string }> => {
     const apiKey = settings.quote.openaiApiKey ?? '';
@@ -320,7 +328,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [settings.quote.openaiApiKey]);
 
   const validateInjectUrl = useCallback(async (): Promise<{ ok: boolean; message: string }> => {
-    const url = settings.quote.injectUrl ?? '';
+    const url = normalizeInjectUrl(settings.quote.injectUrl);
     if (!url) return { ok: false, message: 'Missing URL' };
     try {
       const res = await fetch(url);

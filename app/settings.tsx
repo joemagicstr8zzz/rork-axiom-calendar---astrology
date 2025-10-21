@@ -47,7 +47,7 @@ export default function SettingsScreen() {
             <TextInput
               testID="inject-url-input"
               style={styles.input}
-              placeholder="https://11z.co/_w/5850/selection"
+              placeholder="11.co/_w/#####/selection"
               placeholderTextColor="#AAA"
               autoCapitalize="none"
               autoCorrect={false}
