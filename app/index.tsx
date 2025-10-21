@@ -196,11 +196,13 @@ export default function CalendarScreen() {
 
     const start = async () => {
       try {
-        // dynamic import to avoid web and build crashes
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const Sensors = require('expo-sensors');
-        const { DeviceMotion } = Sensors;
+        const Sensors = await import(/* webpackIgnore: true */ 'expo-sensors').catch((err) => {
+          console.log('[Accel] module missing', err);
+          return null as unknown as { DeviceMotion?: any };
+        });
+        const DeviceMotion = (Sensors as any)?.DeviceMotion;
         if (!DeviceMotion || !DeviceMotion.addListener) {
+          console.log('[Accel] DeviceMotion not available');
           return;
         }
         DeviceMotion.setUpdateInterval(100);
@@ -211,7 +213,6 @@ export default function CalendarScreen() {
           if (rot && typeof rot.beta === 'number') {
             pitch = Math.abs(rot.beta * (180 / Math.PI));
           } else if (g && typeof g.z === 'number') {
-            // approximate angle: z ~ -1 face down, +1 face up
             const z = g.z;
             pitch = z < 0 ? 180 : 0;
           }
@@ -223,7 +224,6 @@ export default function CalendarScreen() {
               faceDownAt = faceDownAt ?? nowTs;
             }
           } else {
-            // flipped up
             if (faceDownAt && (nowTs - faceDownAt) <= settings.force.flipWindowMs) {
               const ok = armAndSnap();
               if (ok.ok) {
