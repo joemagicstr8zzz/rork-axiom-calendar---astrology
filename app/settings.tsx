@@ -28,7 +28,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Quote of the Day</Text>
           </View>
           <View style={styles.card}>
-            <Text style={styles.helperText}>Displays a secret inspirational quote under the month. It listens to your Inject API for a word and asks OpenAI using your prompt.</Text>
+            <Text style={styles.helperText}>Shows a quote under the calendar. It can listen to your Inject API for a word and then ask OpenAI using your prompt. Inject reveals can also be toggled independently for future features.</Text>
 
             <View style={styles.switchRow}>
               <View style={styles.switchContent}>
@@ -38,6 +38,18 @@ export default function SettingsScreen() {
               <Switch
                 value={settings.quote.enabled}
                 onValueChange={(value) => updateQuote({ enabled: value })}
+                trackColor={{ false: '#E0E0E0', true: '#007AFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+            <View style={[styles.switchRow, { marginTop: 8 }]}>
+              <View style={styles.switchContent}>
+                <Text style={styles.optionText}>Inject Reveals</Text>
+                <Text style={styles.optionSubtext}>Independent toggle for Inject-driven UI</Text>
+              </View>
+              <Switch
+                value={!!settings.quote.injectRevealsEnabled}
+                onValueChange={(value) => updateQuote({ injectRevealsEnabled: value })}
                 trackColor={{ false: '#E0E0E0', true: '#007AFF' }}
                 thumbColor="#FFFFFF"
               />

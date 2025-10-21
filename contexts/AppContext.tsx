@@ -76,6 +76,7 @@ interface QuoteSettings {
   lastQuote: QuoteRecord | null;
   status: 'idle' | 'listening' | 'generating' | 'error';
   errorMessage?: string | null;
+  injectRevealsEnabled?: boolean;
 }
 
 interface AppSettings {
@@ -128,14 +129,15 @@ const DEFAULT_SETTINGS: AppSettings = {
     openaiApiKey: null,
     injectUrl: null,
     promptTemplate:
-      'Write a short, original inspirational quote about the word [WORD]. Also include a believable author that has said, or would say something about [WORD] and include birth/death years as applicable.',
+      'Using the topic word [WORD], first check if a real, short inspirational quotation explicitly about [WORD] exists. If yes, return the real text and real author. If none is known, craft a concise, original line in a believable style. Always include an author (real or invented) and a years field: use "(YYYY–YYYY)" for deceased, or "(YYYY–present)" for living. Respond ONLY as JSON with keys text, author, years.',
     model: 'gpt-4o-mini',
     displayPosition: 'belowCalendar',
-    pollIntervalMs: 30000,
+    pollIntervalMs: 60000,
     lastWord: null,
     lastQuote: null,
     status: 'idle',
     errorMessage: null,
+    injectRevealsEnabled: false,
   },
 };
 
@@ -151,6 +153,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }>({ visible: false, card: null, weekNumber: null });
   const [forceState, setForceState] = useState<ForceRuntimeState>({ snapped: false, locked: false, lastTriggerAt: null, panicUntil: null });
   const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const generatingForWordRef = useRef<string | null>(null);
+  const lastGeneratedAtRef = useRef<number>(0);
 
   useEffect(() => {
     loadSettings();
@@ -235,6 +239,13 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [settings.quote.injectUrl]);
 
   const generateQuoteFromWord = useCallback(async (word: string): Promise<QuoteRecord | null> => {
+    if (generatingForWordRef.current === word) {
+      return null;
+    }
+    const nowTs = Date.now();
+    if (nowTs - (lastGeneratedAtRef.current || 0) < Math.max(5000, settings.quote.pollIntervalMs / 2)) {
+      return null;
+    }
     const apiKey = settings.quote.openaiApiKey ?? '';
     const model = settings.quote.model ?? 'gpt-4o-mini';
     if (!apiKey) {
@@ -242,16 +253,17 @@ export const [AppProvider, useApp] = createContextHook(() => {
       return null;
     }
     try {
+      generatingForWordRef.current = word;
       await updateQuote({ status: 'generating', errorMessage: null });
       const prompt = settings.quote.promptTemplate.replace(/\[WORD\]/g, word);
       const body = {
         model,
         messages: [
-          { role: 'system', content: 'You generate JSON only. Respond strictly with a JSON object: {"text":"quote","author":"Name","years":"(1900–1980)"} years optional.' },
+          { role: 'system', content: 'Output ONLY JSON. Schema: {"text":"string","author":"string","years":"string"}. years must be in the form "(YYYY–YYYY)" or "(YYYY–present)". No explanations.' },
           { role: 'user', content: prompt },
         ],
-        temperature: 0.8,
-        max_tokens: 200,
+        temperature: 0.6,
+        max_tokens: 180,
       } as const;
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -279,11 +291,14 @@ export const [AppProvider, useApp] = createContextHook(() => {
       }
       const record: QuoteRecord = { text: parsed.text, author: parsed.author, years: typeof parsed.years === 'string' ? parsed.years : null };
       await updateQuote({ lastQuote: record, lastWord: word, status: settings.quote.enabled ? 'listening' : 'idle', errorMessage: null });
+      lastGeneratedAtRef.current = Date.now();
       return record;
     } catch (e: any) {
       console.log('[Quote] openai error', e);
       await updateQuote({ status: 'error', errorMessage: e?.message ?? 'Generation failed' });
       return null;
+    } finally {
+      generatingForWordRef.current = null;
     }
   }, [settings.quote.openaiApiKey, settings.quote.model, settings.quote.promptTemplate, settings.quote.enabled, updateQuote]);
 
@@ -295,8 +310,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
     if (!settings.quote.enabled) return;
     if (!settings.quote.injectUrl) return;
     const tick = async () => {
+      if (settings.quote.status === 'generating') return;
       const word = await fetchInjectWord();
       if (!word) return;
+      if (generatingForWordRef.current === word) return;
       if (word !== settings.quote.lastWord) {
         await generateQuoteFromWord(word);
       }
