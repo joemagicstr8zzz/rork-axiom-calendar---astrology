@@ -19,6 +19,9 @@ function RootLayoutNav() {
       <Stack.Screen name="astrology" />
       <Stack.Screen name="sign" />
       <Stack.Screen name="settings" />
+      <Stack.Screen name="stack-editor" />
+      <Stack.Screen name="help" />
+      <Stack.Screen name="month-overrides" />
     </Stack>
   );
 }

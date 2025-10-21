@@ -17,7 +17,7 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function CalendarScreen() {
   const router = useRouter();
-  const { currentStack, settings, showPeek, peekOverlay, forceState, getForcedMonthDate, armAndSnap, lockForceDay, cancelForce } = useApp();
+  const { currentStack, settings, showPeek, peekOverlay, forceState, getForcedMonthDate, getValidForcedDayFor, armAndSnap, lockForceDay, cancelForce } = useApp();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
@@ -101,9 +101,32 @@ export default function CalendarScreen() {
     if (Platform.OS !== 'web') {
       Haptics.selectionAsync();
     }
+
+    let targetY = year;
+    let targetM = month;
+    let targetD = day;
+
+    if (settings.force.enabled && forceState.locked && settings.force.forceDayEnabled) {
+      const forcedMonth = getForcedMonthDate();
+      const inForcedMonth = (year === forcedMonth.year && month === forcedMonth.monthIndex);
+      const scopeAny = settings.force.remapScope === 'anyVisible';
+      if (scopeAny || inForcedMonth) {
+        if (scopeAny && !inForcedMonth) {
+          targetY = year;
+          targetM = month;
+        } else {
+          targetY = forcedMonth.year;
+          targetM = forcedMonth.monthIndex;
+        }
+        const valid = getValidForcedDayFor(targetY, targetM);
+        if (valid) {
+          targetD = valid;
+        }
+      }
+    }
     
     router.push(
-      `/day?year=${year}&month=${month}&day=${day}` as any
+      `/day?year=${targetY}&month=${targetM}&day=${targetD}` as any
     );
   };
 
@@ -162,6 +185,69 @@ export default function CalendarScreen() {
     }
     return () => {};
   }, [armAndSnap, lockForceDay, cancelForce, getForcedMonthDate]);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    if (!settings.force.enabled) return;
+    if (!settings.force.accelerometerEnabled) return;
+    let subscription: any = null;
+    let faceDownAt: number | null = null;
+    let stableSince: number | null = null;
+
+    const start = async () => {
+      try {
+        // dynamic import to avoid web and build crashes
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const Sensors = require('expo-sensors');
+        const { DeviceMotion } = Sensors;
+        if (!DeviceMotion || !DeviceMotion.addListener) {
+          return;
+        }
+        DeviceMotion.setUpdateInterval(100);
+        subscription = DeviceMotion.addListener((data: any) => {
+          const g = data?.gravity || data?.accelerationIncludingGravity || data?.acceleration || null;
+          const rot = data?.rotation ?? null;
+          let pitch = 0;
+          if (rot && typeof rot.beta === 'number') {
+            pitch = Math.abs(rot.beta * (180 / Math.PI));
+          } else if (g && typeof g.z === 'number') {
+            // approximate angle: z ~ -1 face down, +1 face up
+            const z = g.z;
+            pitch = z < 0 ? 180 : 0;
+          }
+          const nowTs = Date.now();
+          const faceDown = pitch >= settings.force.faceDownAngleDeg;
+          if (faceDown) {
+            if (stableSince === null) stableSince = nowTs;
+            if (nowTs - (stableSince ?? nowTs) >= settings.force.stationaryMs) {
+              faceDownAt = faceDownAt ?? nowTs;
+            }
+          } else {
+            // flipped up
+            if (faceDownAt && (nowTs - faceDownAt) <= settings.force.flipWindowMs) {
+              const ok = armAndSnap();
+              if (ok.ok) {
+                const forced = getForcedMonthDate();
+                animateToForcedMonth(forced.year, forced.monthIndex);
+              }
+            }
+            faceDownAt = null;
+            stableSince = null;
+          }
+        });
+      } catch (e) {
+        console.log('[Accel] not available', e);
+      }
+    };
+
+    start();
+    return () => {
+      try {
+        if (subscription && subscription.remove) subscription.remove();
+      } catch {}
+      subscription = null;
+    };
+  }, [settings.force.enabled, settings.force.accelerometerEnabled, settings.force.faceDownAngleDeg, settings.force.stationaryMs, settings.force.flipWindowMs, armAndSnap, getForcedMonthDate]);
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);

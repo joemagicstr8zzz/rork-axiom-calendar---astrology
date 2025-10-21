@@ -207,26 +207,67 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Force Mode</Text>
           </View>
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>Force Target</Text>
-            <View style={styles.option}>
-              <View style={styles.optionContent}>
-                <Text style={styles.optionText}>Month</Text>
-                <Text style={styles.optionSubtext}>Relative from now: {settings.force.relativeOffset}</Text>
+            <View style={styles.switchRow}>
+              <View style={styles.switchContent}>
+                <Text style={styles.optionText}>Enable Force Mode</Text>
+                <Text style={styles.optionSubtext}>Allow snap and day lock features</Text>
               </View>
-              <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ relativeOffset: settings.force.relativeOffset - 1, monthMode: 'relative' })}>
-                  <Text style={{ fontSize: 18 }}>−</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ relativeOffset: settings.force.relativeOffset + 1, monthMode: 'relative' })}>
-                  <Text style={{ fontSize: 18 }}>+</Text>
-                </TouchableOpacity>
-              </View>
+              <Switch
+                value={settings.force.enabled}
+                onValueChange={(value) => updateForce({ enabled: value })}
+                trackColor={{ false: '#E0E0E0', true: '#007AFF' }}
+                thumbColor="#FFFFFF"
+              />
             </View>
 
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Force Month</Text>
             <View style={styles.option}>
               <View style={styles.optionContent}>
-                <Text style={styles.optionText}>Force Day</Text>
-                <Text style={styles.optionSubtext}>Opens this day when locked</Text>
+                <Text style={styles.optionText}>Mode</Text>
+                <Text style={styles.optionSubtext}>{settings.force.monthMode.toUpperCase()}</Text>
+              </View>
+              <View style={{ flexDirection: 'row' }}>
+                {(['off','relative','absolute'] as const).map(m => (
+                  <TouchableOpacity key={m} style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ monthMode: m })}>
+                    <Text style={{ fontWeight: settings.force.monthMode === m ? '700' : '400', color: settings.force.monthMode === m ? '#007AFF' : '#666' }}>{m}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+            {settings.force.monthMode === 'relative' && (
+              <View style={styles.option}>
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionText}>Relative Offset</Text>
+                  <Text style={styles.optionSubtext}>from current month: {settings.force.relativeOffset}</Text>
+                </View>
+                <View style={{ flexDirection: 'row' }}>
+                  <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ relativeOffset: settings.force.relativeOffset - 1 })}>
+                    <Text style={{ fontSize: 18 }}>−</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ relativeOffset: settings.force.relativeOffset + 1 })}>
+                    <Text style={{ fontSize: 18 }}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Force Day</Text>
+            <View style={styles.switchRow}>
+              <View style={styles.switchContent}>
+                <Text style={styles.optionText}>Enable Force Day</Text>
+                <Text style={styles.optionSubtext}>When locked, any tap opens your chosen day</Text>
+              </View>
+              <Switch
+                value={settings.force.forceDayEnabled}
+                onValueChange={(value) => updateForce({ forceDayEnabled: value })}
+                trackColor={{ false: '#E0E0E0', true: '#007AFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+            <View style={styles.option}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Day</Text>
+                <Text style={styles.optionSubtext}>1..31</Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ forceDay: Math.max(1, settings.force.forceDay - 1) })}>
@@ -238,24 +279,114 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-
-            <Text style={[styles.cardLabel, { marginTop: 12 }]}>Tap Remap</Text>
-            <TouchableOpacity style={styles.option} onPress={() => updateForce({ tapRemapMode: 'stealth' })}>
+            <View style={styles.option}>
               <View style={styles.optionContent}>
-                <Text style={styles.optionText}>Stealth</Text>
-                <Text style={styles.optionSubtext}>Any tile tap opens forced day</Text>
+                <Text style={styles.optionText}>Invalid day fallback</Text>
+                <Text style={styles.optionSubtext}>If day doesn't exist in that month</Text>
               </View>
-              <View style={[styles.radio, settings.force.tapRemapMode === 'stealth' && styles.radioSelected]} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.option} onPress={() => updateForce({ tapRemapMode: 'honest' })}>
+              <View style={{ flexDirection: 'row' }}>
+                {(['nearest','block'] as const).map(p => (
+                  <TouchableOpacity key={p} style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ fallbackPolicy: p })}>
+                    <Text style={{ fontWeight: settings.force.fallbackPolicy === p ? '700' : '400', color: settings.force.fallbackPolicy === p ? '#007AFF' : '#666' }}>{p}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Apply Force When</Text>
+            <View style={styles.option}>
               <View style={styles.optionContent}>
-                <Text style={styles.optionText}>Honest Tile</Text>
-                <Text style={styles.optionSubtext}>Forced day tile subtly bolder</Text>
+                <Text style={styles.optionText}>Trigger</Text>
+                <Text style={styles.optionSubtext}>Accelerometer flip or manual snap</Text>
               </View>
-              <View style={[styles.radio, settings.force.tapRemapMode === 'honest' && styles.radioSelected]} />
+              <View style={{ flexDirection: 'row' }}>
+                {(['accelerometer','manual','either'] as const).map(k => (
+                  <TouchableOpacity key={k} style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ applyWhen: k })}>
+                    <Text style={{ fontWeight: settings.force.applyWhen === k ? '700' : '400', color: settings.force.applyWhen === k ? '#007AFF' : '#666' }}>{k}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Accelerometer Force</Text>
+            <View style={styles.switchRow}>
+              <View style={styles.switchContent}>
+                <Text style={styles.optionText}>Enable Accel</Text>
+                <Text style={styles.optionSubtext}>Face-down → up flip to snap</Text>
+              </View>
+              <Switch
+                value={settings.force.accelerometerEnabled}
+                onValueChange={(value) => updateForce({ accelerometerEnabled: value })}
+                trackColor={{ false: '#E0E0E0', true: '#007AFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+            <View style={styles.option}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Face-down angle</Text>
+                <Text style={styles.optionSubtext}>≥ {settings.force.faceDownAngleDeg}°</Text>
+              </View>
+              <View style={{ flexDirection: 'row' }}>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ faceDownAngleDeg: Math.max(120, settings.force.faceDownAngleDeg - 5) })}>
+                  <Text style={{ fontSize: 18 }}>−</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ faceDownAngleDeg: Math.min(180, settings.force.faceDownAngleDeg + 5) })}>
+                  <Text style={{ fontSize: 18 }}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.option}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Stationary window</Text>
+                <Text style={styles.optionSubtext}>{settings.force.stationaryMs} ms</Text>
+              </View>
+              <View style={{ flexDirection: 'row' }}>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ stationaryMs: Math.max(300, settings.force.stationaryMs - 50) })}>
+                  <Text style={{ fontSize: 18 }}>−</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ stationaryMs: Math.min(800, settings.force.stationaryMs + 50) })}>
+                  <Text style={{ fontSize: 18 }}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.option}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Flip window</Text>
+                <Text style={styles.optionSubtext}>{settings.force.flipWindowMs} ms</Text>
+              </View>
+              <View style={{ flexDirection: 'row' }}>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ flipWindowMs: Math.max(1500, settings.force.flipWindowMs - 250) })}>
+                  <Text style={{ fontSize: 18 }}>−</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ flipWindowMs: Math.min(8000, settings.force.flipWindowMs + 250) })}>
+                  <Text style={{ fontSize: 18 }}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Tap Remap (Day Lock)</Text>
+            <View style={styles.option}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Remap scope</Text>
+                <Text style={styles.optionSubtext}>Where forced day applies</Text>
+              </View>
+              <View style={{ flexDirection: 'row' }}>
+                {(['forcedMonthOnly','anyVisible'] as const).map(s => (
+                  <TouchableOpacity key={s} style={{ paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => updateForce({ remapScope: s })}>
+                    <Text style={{ fontWeight: settings.force.remapScope === s ? '700' : '400', color: settings.force.remapScope === s ? '#007AFF' : '#666' }}>{s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+            <TouchableOpacity style={styles.option} onPress={() => updateForce({ tapRemapMode: settings.force.tapRemapMode === 'stealth' ? 'honest' : 'stealth' })}>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionText}>Tile feedback</Text>
+                <Text style={styles.optionSubtext}>{settings.force.tapRemapMode === 'stealth' ? 'Stealth (default)' : 'Honest tile hint'}</Text>
+              </View>
+              <View style={[styles.radio, styles.radioSelected]} />
             </TouchableOpacity>
 
-            <Text style={[styles.cardLabel, { marginTop: 12 }]}>Snap Animation</Text>
+            <Text style={[styles.cardLabel, { marginTop: 16 }]}>Snap Animation</Text>
             <View style={styles.option}>
               <View style={styles.optionContent}>
                 <Text style={styles.optionText}>Duration</Text>
@@ -270,6 +401,33 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={[styles.sectionHeader, { backgroundColor: '#00B4FF' }]}> 
+            <Text style={styles.sectionTitle}>Custom Month Overrides</Text>
+          </View>
+          <View style={styles.card}>
+            <View style={styles.switchRow}>
+              <View style={styles.switchContent}>
+                <Text style={styles.optionText}>Enable Month Overrides</Text>
+                <Text style={styles.optionSubtext}>Replace normal content for selected months</Text>
+              </View>
+              <Switch
+                value={settings.force.overridesEnabled}
+                onValueChange={(value) => updateForce({ overridesEnabled: value })}
+                trackColor={{ false: '#E0E0E0', true: '#007AFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.manageBtn, { marginTop: 16 }]}
+              onPress={() => router.push('/month-overrides')}
+            >
+              <Text style={styles.manageText}>Open Month Overrides Editor</Text>
+            </TouchableOpacity>
           </View>
         </View>
 

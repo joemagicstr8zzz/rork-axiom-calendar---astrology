@@ -8,15 +8,52 @@ export type Week53Handling = 'joker' | 'merge52' | 'wrap1';
 
 export type HolidayCountry = 'US' | 'UK' | 'CA' | 'AU' | 'DE' | 'FR';
 
-type ForceMonthMode = 'relative' | 'absolute';
+export type ForceMonthMode = 'off' | 'relative' | 'absolute';
+export type ApplyForceWhen = 'accelerometer' | 'manual' | 'either';
+export type RemapScope = 'forcedMonthOnly' | 'anyVisible';
+export type FallbackPolicy = 'nearest' | 'block';
+
+export type OverrideItemType = 'Card' | 'ESP' | 'Color' | 'Number' | 'Word' | 'Zodiac' | 'Birthstone' | 'Element' | 'Planet' | 'Pi' | 'Rune' | 'IChing' | 'Constellation' | 'Note';
+
+export interface ItemMapping {
+  type: OverrideItemType;
+  value: string | number;
+  cues?: string;
+}
+
+export interface DayOverride {
+  day: number;
+  publicLabel: string;
+  items: ItemMapping[];
+  defaultIndex: number; // 1-based
+}
+
+export interface MonthOverrides {
+  monthYear: string; // YYYY-MM
+  days: DayOverride[];
+}
+
 interface ForceSettings {
+  enabled: boolean;
   monthMode: ForceMonthMode;
   relativeOffset: number;
   absoluteYear: number;
-  absoluteMonthIndex: number;
-  forceDay: number;
+  absoluteMonthIndex: number; // 0-11
+  forceDayEnabled: boolean;
+  forceDay: number; // 1..31
+  fallbackPolicy: FallbackPolicy;
+  applyWhen: ApplyForceWhen;
+  accelerometerEnabled: boolean;
+  faceDownAngleDeg: number; // >= 150
+  stationaryMs: number; // 300-600
+  flipWindowMs: number; // 2000-6000
+  debounceMs: number; // >= 2000 for flips
   tapRemapMode: 'stealth' | 'honest';
-  snapDurationMs: number;
+  remapScope: RemapScope;
+  cancelLockOnBack: boolean;
+  snapDurationMs: number; // 300-700
+  overridesEnabled: boolean;
+  overridesMap: Record<string, MonthOverrides>; // key YYYY-MM
 }
 
 interface ForceRuntimeState {
@@ -55,13 +92,26 @@ const DEFAULT_SETTINGS: AppSettings = {
   holidaysEnabled: true,
   holidayCountry: 'US',
   force: {
-    monthMode: 'relative',
+    enabled: false,
+    monthMode: 'off',
     relativeOffset: 0,
     absoluteYear: now.getFullYear(),
     absoluteMonthIndex: now.getMonth(),
+    forceDayEnabled: false,
     forceDay: 1,
+    fallbackPolicy: 'nearest',
+    applyWhen: 'accelerometer',
+    accelerometerEnabled: false,
+    faceDownAngleDeg: 150,
+    stationaryMs: 400,
+    flipWindowMs: 4000,
+    debounceMs: 2000,
     tapRemapMode: 'stealth',
+    remapScope: 'forcedMonthOnly',
+    cancelLockOnBack: true,
     snapDurationMs: 500,
+    overridesEnabled: false,
+    overridesMap: {},
   },
 };
 
@@ -139,38 +189,57 @@ export const [AppProvider, useApp] = createContextHook(() => {
       const target = new Date(base.getFullYear(), base.getMonth() + settings.force.relativeOffset, 1);
       return { year: target.getFullYear(), monthIndex: target.getMonth() };
     }
-    return { year: settings.force.absoluteYear, monthIndex: settings.force.absoluteMonthIndex };
+    if (settings.force.monthMode === 'absolute') {
+      return { year: settings.force.absoluteYear, monthIndex: settings.force.absoluteMonthIndex };
+    }
+    const d = new Date();
+    return { year: d.getFullYear(), monthIndex: d.getMonth() };
   }, [settings.force]);
 
-  const debounceOk = (nowTs: number) => {
+  const getValidForcedDayFor = useCallback((y: number, m: number): number | null => {
+    if (!settings.force.forceDayEnabled) return null;
+    const daysIn = new Date(y, m + 1, 0).getDate();
+    const desired = settings.force.forceDay;
+    if (desired <= daysIn) return desired;
+    if (settings.force.fallbackPolicy === 'nearest') {
+      return daysIn;
+    }
+    return null;
+  }, [settings.force.forceDayEnabled, settings.force.forceDay, settings.force.fallbackPolicy]);
+
+  const debounceOk = (nowTs: number, windowMs?: number | null) => {
     const last = forceState.lastTriggerAt ?? 0;
-    return nowTs - last > 250 && (!forceState.panicUntil || nowTs > forceState.panicUntil);
+    const deltaOk = nowTs - last > (windowMs ?? 250);
+    return deltaOk && (!forceState.panicUntil || nowTs > forceState.panicUntil);
   };
 
   const markTrigger = (ts: number) => setForceState(prev => ({ ...prev, lastTriggerAt: ts }));
 
   const armAndSnap = useCallback(() => {
+    if (!settings.force.enabled) return { ok: false } as const;
     const ts = Date.now();
-    if (!debounceOk(ts)) return { ok: false } as const;
+    if (!debounceOk(ts, settings.force.debounceMs)) return { ok: false } as const;
     setForceState(prev => ({ ...prev, snapped: true }));
     markTrigger(ts);
     return { ok: true } as const;
-  }, [forceState.lastTriggerAt, forceState.panicUntil]);
+  }, [settings.force.enabled, settings.force.debounceMs, forceState.lastTriggerAt, forceState.panicUntil]);
 
   const lockForceDay = useCallback(() => {
+    if (!settings.force.enabled || !settings.force.forceDayEnabled) return { ok: false } as const;
     const ts = Date.now();
-    if (!debounceOk(ts)) return { ok: false } as const;
+    if (!debounceOk(ts, settings.force.debounceMs)) return { ok: false } as const;
     setForceState(prev => ({ ...prev, locked: true }));
     markTrigger(ts);
     return { ok: true } as const;
-  }, [forceState.lastTriggerAt, forceState.panicUntil]);
+  }, [settings.force.enabled, settings.force.forceDayEnabled, settings.force.debounceMs, forceState.lastTriggerAt, forceState.panicUntil]);
 
   const armSnapAndLock = useCallback(() => {
+    if (!settings.force.enabled) return { ok: false } as const;
     const ts = Date.now();
-    if (!debounceOk(ts)) return { ok: false } as const;
-    setForceState({ snapped: true, locked: true, lastTriggerAt: ts, panicUntil: null });
+    if (!debounceOk(ts, settings.force.debounceMs)) return { ok: false } as const;
+    setForceState({ snapped: true, locked: !!settings.force.forceDayEnabled, lastTriggerAt: ts, panicUntil: null });
     return { ok: true } as const;
-  }, [forceState.lastTriggerAt, forceState.panicUntil]);
+  }, [settings.force.enabled, settings.force.forceDayEnabled, settings.force.debounceMs, forceState.lastTriggerAt, forceState.panicUntil]);
 
   const cancelForce = useCallback(() => {
     const ts = Date.now();
@@ -181,6 +250,29 @@ export const [AppProvider, useApp] = createContextHook(() => {
     const ts = Date.now();
     setForceState({ snapped: false, locked: false, lastTriggerAt: ts, panicUntil: ts + 10000 });
   }, []);
+
+  const setOverridesForMonth = useCallback(async (mo: MonthOverrides) => {
+    const updatedForce = { ...settings.force, overridesMap: { ...settings.force.overridesMap, [mo.monthYear]: mo } };
+    const updated = { ...settings, force: updatedForce } as AppSettings;
+    setSettings(updated);
+    try {
+      await AsyncStorage.setItem('axiom_settings', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to save overrides', e);
+    }
+  }, [settings]);
+
+  const removeOverridesForMonth = useCallback(async (key: string) => {
+    const clone = { ...settings.force.overridesMap };
+    delete clone[key];
+    const updated = { ...settings, force: { ...settings.force, overridesMap: clone } } as AppSettings;
+    setSettings(updated);
+    try {
+      await AsyncStorage.setItem('axiom_settings', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to remove overrides', e);
+    }
+  }, [settings]);
 
   return useMemo(() => ({
     settings,
@@ -195,10 +287,13 @@ export const [AppProvider, useApp] = createContextHook(() => {
     showPeek,
     forceState,
     getForcedMonthDate,
+    getValidForcedDayFor,
     armAndSnap,
     lockForceDay,
     armSnapAndLock,
     cancelForce,
     panic,
-  }), [settings, saveSettings, updateForce, isLoading, currentStack, showMagicianPanel, toggleMagicianPanel, peekOverlay, showPeek, forceState, getForcedMonthDate, armAndSnap, lockForceDay, armSnapAndLock, cancelForce, panic]);
+    setOverridesForMonth,
+    removeOverridesForMonth,
+  }), [settings, saveSettings, updateForce, isLoading, currentStack, showMagicianPanel, toggleMagicianPanel, peekOverlay, showPeek, forceState, getForcedMonthDate, getValidForcedDayFor, armAndSnap, lockForceDay, armSnapAndLock, cancelForce, panic, setOverridesForMonth, removeOverridesForMonth]);
 });

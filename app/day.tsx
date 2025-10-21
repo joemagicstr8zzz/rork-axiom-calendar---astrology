@@ -49,6 +49,9 @@ export default function DayDetailScreen() {
 
   const holidaysForDay = settings.holidaysEnabled ? (getHolidaysMapForMonth(date.getFullYear(), date.getMonth(), settings.holidayCountry)[date.getDate()] ?? []) : [];
 
+  const monthKey = `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}`;
+  const dayOverride = settings.force.overridesEnabled ? settings.force.overridesMap[monthKey]?.days.find(d => d.day === date.getDate()) : undefined;
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -100,6 +103,24 @@ export default function DayDetailScreen() {
             {holidaysForDay.map((h, i) => (
               <Text key={`${h}-${i}`} style={styles.holidayText}>{h}</Text>
             ))}
+          </View>
+        )}
+
+        {dayOverride && (
+          <View style={styles.overrideCard}>
+            <Text style={styles.overrideTitle}>Curated Item</Text>
+            {dayOverride.publicLabel ? (
+              <Text style={styles.overridePublic}>{dayOverride.publicLabel}</Text>
+            ) : null}
+            {dayOverride.items.length > 0 && (
+              <View style={styles.overrideItemsRow}>
+                {dayOverride.items.map((it, idx) => (
+                  <View key={`${idx}`} style={styles.overrideChip}>
+                    <Text style={styles.overrideChipText}>{String(it.value)}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -245,6 +266,46 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#FFD6D6',
+  },
+  overrideCard: {
+    marginHorizontal: 24,
+    padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  overrideTitle: {
+    fontSize: 12,
+    color: '#999',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  overridePublic: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 8,
+  },
+  overrideItemsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  overrideChip: {
+    backgroundColor: '#F1F8FF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  overrideChipText: {
+    color: '#007AFF',
+    fontWeight: '700',
   },
   holidayTitle: {
     fontSize: 12,
