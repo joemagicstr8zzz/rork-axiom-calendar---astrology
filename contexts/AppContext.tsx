@@ -255,12 +255,30 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   const fetchInjectWord = useCallback(async (): Promise<string | null> => {
     try {
-      const url = normalizeInjectUrl(settings.quote.injectUrl);
-      if (!url) return null;
-      const res = await fetch(url, { method: 'GET' });
+      const base = normalizeInjectUrl(settings.quote.injectUrl);
+      if (!base) return null;
+      const bust = Date.now();
+      const url = `${base}${base.includes('?') ? '&' : '?'}_=${bust}`;
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      });
       if (!res.ok) throw new Error(`Inject API ${res.status}`);
-      const json = (await res.json()) as { value?: unknown };
-      const word = typeof json?.value === 'string' ? json.value : null;
+      const json: any = await res.json();
+      let word: string | null = null;
+      if (typeof json?.value === 'string') {
+        word = json.value;
+      } else if (typeof json === 'string') {
+        word = json;
+      } else if (typeof json?.data?.value === 'string') {
+        word = json.data.value;
+      } else if (Array.isArray(json) && typeof json[0]?.value === 'string') {
+        word = json[0].value;
+      }
       return word;
     } catch (e) {
       console.log('[Quote] inject fetch error', e);
