@@ -167,8 +167,8 @@ export default function DayDetailScreen() {
         <TouchableOpacity style={styles.addBar} onPress={() => router.push({ pathname: '/event-editor', params: { date: ymd, type: 'quote' } } as any)} testID="add-event">
           <Text style={styles.addBarText}>Add event on {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.fab} onPress={() => router.push({ pathname: '/event-editor', params: { date: ymd, type: 'quote' } } as any)} testID="fab-add">
-          <Text style={{ color: '#fff', fontWeight: '800', fontSize: 20 }}>+</Text>
+        <TouchableOpacity style={styles.plusButton} onPress={() => router.push({ pathname: '/event-editor', params: { date: ymd, type: 'quote' } } as any)} testID="fab-add">
+          <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 22, lineHeight: 22 }}>+</Text>
         </TouchableOpacity>
       </View>
 
@@ -410,10 +410,10 @@ const styles = StyleSheet.create({
   eventTitle: { color: '#C6B88E', fontWeight: '800', fontSize: 16 },
   eventSubtitle: { color: '#C6B88E', marginTop: 2, marginBottom: 6 },
   eventBody: { color: '#111', lineHeight: 20 },
-  addBarWrapper: { position: 'absolute', left: 0, right: 0, bottom: 16, paddingHorizontal: 16 },
-  addBar: { backgroundColor: '#3C484F', paddingVertical: 12, borderRadius: 28, alignItems: 'center', borderWidth: 1, borderColor: '#E4D8A5' },
-  addBarText: { color: '#E4D8A5', fontWeight: '700' },
-  fab: { position: 'absolute', right: 16, bottom: 8, width: 56, height: 56, borderRadius: 12, backgroundColor: '#111', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#333' },
+  addBarWrapper: { position: 'absolute', left: 0, right: 0, bottom: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' },
+  addBar: { flex: 1, backgroundColor: '#3C484F', paddingVertical: 12, paddingHorizontal: 18, borderRadius: 28, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E6DDB3' },
+  addBarText: { color: '#E6DDB3', fontWeight: '700' },
+  plusButton: { marginLeft: 12, width: 56, height: 56, borderRadius: 12, backgroundColor: '#141414', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#222', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
   peekOverlay: {
     position: 'absolute',
     top: 80,

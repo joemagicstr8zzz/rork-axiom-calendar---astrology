@@ -122,6 +122,17 @@ export default function EventEditor() {
       <Stack.Screen options={{ title: 'Event', headerShadowVisible: false }} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: Math.max(24, insets.bottom + 12) }}>
         <View style={styles.card}>
+          <Text style={styles.sectionHeader}>Event Settings</Text>
+
+          <View style={styles.segment}>
+            <TouchableOpacity onPress={() => setType('regular')} style={[styles.segmentBtn, type === 'regular' && styles.segmentBtnActive]} testID="type-regular">
+              <Text style={[styles.segmentText, type === 'regular' && styles.segmentTextActive]}>Regular</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setType('quote')} style={[styles.segmentBtn, type === 'quote' && styles.segmentBtnActive]} testID="type-quote">
+              <Text style={[styles.segmentText, type === 'quote' && styles.segmentTextActive]}>Quote of the Day</Text>
+            </TouchableOpacity>
+          </View>
+
           <TextInput placeholder="Title" placeholderTextColor="#9AA0A6" value={title} onChangeText={setTitle} style={styles.title} testID="title" />
           <View style={styles.divider} />
 
@@ -172,7 +183,7 @@ export default function EventEditor() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.mutedHeader}>Event Sources</Text>
+          <Text style={styles.mutedHeader}>Quote of the Day</Text>
           <View style={styles.rowBetween}><Text style={styles.small}>Inject</Text><Text style={styles.small}>{settings.quote.injectUrl ? settings.quote.injectUrl : 'OFF'}</Text></View>
           <View style={styles.rowBetween}><Text style={styles.small}>Use GPT Translation</Text><Text style={styles.small}>{settings.quote.openaiApiKey ? 'ON' : 'OFF'}</Text></View>
           {type === 'quote' && (
@@ -211,6 +222,12 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderColor: '#3E4A50', backgroundColor: '#223036', borderRadius: 12, paddingHorizontal: 12, paddingVertical: Platform.OS === 'web' ? 10 : 8, color: '#E6DDB3' },
   notes: { minHeight: 100, textAlignVertical: 'top', marginTop: 8 },
   mutedHeader: { color: '#C6B88E', fontWeight: '700', marginBottom: 8 },
+  sectionHeader: { color: '#C6B88E', fontWeight: '700', marginBottom: 8 },
+  segment: { flexDirection: 'row', backgroundColor: '#223036', borderRadius: 999, padding: 4, marginBottom: 12 },
+  segmentBtn: { flex: 1, borderRadius: 999, paddingVertical: 8, alignItems: 'center' },
+  segmentBtnActive: { backgroundColor: '#38464C' },
+  segmentText: { color: '#9AA0A6', fontWeight: '700' },
+  segmentTextActive: { color: '#E6DDB3' },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   small: { color: '#9AA0A6' },
   previewBox: { backgroundColor: '#223036', borderRadius: 12, padding: 12, marginTop: 8 },
