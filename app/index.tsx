@@ -7,6 +7,8 @@ import { getHolidaysMapForMonth, getHolidayColor } from '@/constants/holidays';
 import { dateToCard, dateToWeekCard, getFocusWord, startOfWeek } from '@/utils/mapping';
 
 import * as Haptics from 'expo-haptics';
+import { useFocusEffect } from '@react-navigation/native';
+import React from "react";
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -17,7 +19,7 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function CalendarScreen() {
   const router = useRouter();
-  const { currentStack, settings, showPeek, peekOverlay, forceState, getForcedMonthDate, getValidForcedDayFor, armAndSnap, lockForceDay, cancelForce, eventsByDate } = useApp();
+  const { currentStack, settings, showPeek, peekOverlay, forceState, getForcedMonthDate, getValidForcedDayFor, armAndSnap, lockForceDay, cancelForce, eventsByDate, setQuoteAggressive } = useApp();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
@@ -185,6 +187,17 @@ export default function CalendarScreen() {
     }
     return () => {};
   }, [armAndSnap, lockForceDay, cancelForce, getForcedMonthDate]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (settings.quote.enabled && settings.quote.injectUrl) {
+        setQuoteAggressive(true);
+      }
+      return () => {
+        setQuoteAggressive(false);
+      };
+    }, [settings.quote.enabled, settings.quote.injectUrl, setQuoteAggressive])
+  );
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);

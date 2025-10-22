@@ -181,6 +181,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const generatingForWordRef = useRef<string | null>(null);
   const lastGeneratedAtRef = useRef<number>(0);
+  const [quoteAggressive, setQuoteAggressive] = useState<boolean>(false);
 
   useEffect(() => {
     loadSettings();
@@ -276,7 +277,6 @@ export const [AppProvider, useApp] = createContextHook(() => {
     const apiKey = settings.quote.openaiApiKey ?? '';
     const model = settings.quote.model ?? 'gpt-4o-mini';
     if (!apiKey) {
-      await updateQuote({ status: 'error', errorMessage: 'Missing OpenAI API key' });
       return null;
     }
     try {
@@ -336,24 +336,29 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }
     if (!settings.quote.enabled) return;
     if (!settings.quote.injectUrl) return;
+    const effectiveInterval = Math.max(250, quoteAggressive ? 1000 : settings.quote.pollIntervalMs);
     const tick = async () => {
       if (settings.quote.status === 'generating') return;
       const word = await fetchInjectWord();
       if (!word) return;
       if (generatingForWordRef.current === word) return;
       if (word !== settings.quote.lastWord) {
-        await generateQuoteFromWord(word);
+        if (settings.quote.openaiApiKey) {
+          await generateQuoteFromWord(word);
+        } else {
+          await updateQuote({ lastWord: word, lastQuote: { text: word, author: '', years: null }, status: 'listening', errorMessage: null });
+        }
       }
     };
     tick();
-    quoteTimerRef.current = setInterval(tick, settings.quote.pollIntervalMs);
+    quoteTimerRef.current = setInterval(tick, effectiveInterval);
     return () => {
       if (quoteTimerRef.current) {
         clearInterval(quoteTimerRef.current);
         quoteTimerRef.current = null;
       }
     };
-  }, [settings.quote.enabled, settings.quote.pollIntervalMs, settings.quote.injectUrl, fetchInjectWord, generateQuoteFromWord, settings.quote.lastWord]);
+  }, [settings.quote.enabled, settings.quote.pollIntervalMs, settings.quote.injectUrl, settings.quote.status, settings.quote.lastWord, settings.quote.openaiApiKey, fetchInjectWord, generateQuoteFromWord, updateQuote, quoteAggressive]);
 
   const validateOpenAIKey = useCallback(async (): Promise<{ ok: boolean; message: string }> => {
     const apiKey = settings.quote.openaiApiKey ?? '';
@@ -570,6 +575,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     validateOpenAIKey,
     validateInjectUrl,
     generateQuoteFromWord,
+    setQuoteAggressive,
     // Events API
     events,
     addOrUpdateEvent,
