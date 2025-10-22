@@ -37,11 +37,12 @@ export default function EventDetail() {
         </View>
       </ScrollView>
 
-      <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.action} onPress={() => router.push({ pathname: '/event-editor', params: { id: ev.id } } as any)}><Text style={styles.actionText}>Edit</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.action} onPress={async () => { try { await Share.share({ message: `${ev.title}\n${ev.notes}` }); } catch {} }}><Text style={styles.actionText}>Share</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.action} onPress={async () => { await deleteEvent(ev.id); router.back(); }}><Text style={styles.actionText}>Delete</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.action} onPress={() => router.back()}><Text style={styles.actionText}>More</Text></TouchableOpacity>
+      <View style={[styles.actionRow, { bottom: Math.max(insets.bottom, 0), paddingBottom: 8 }]}>
+
+        <TouchableOpacity style={styles.action} onPress={() => router.push({ pathname: '/event-editor', params: { id: ev.id } } as any)} testID="action-edit"><Text style={styles.actionText}>Edit</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.action} onPress={async () => { try { await Share.share({ message: `${ev.title}\n${ev.notes}` }); } catch {} }} testID="action-share"><Text style={styles.actionText}>Share</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.action} onPress={async () => { await deleteEvent(ev.id); router.back(); }} testID="action-delete"><Text style={styles.actionText}>Delete</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.action} onPress={() => router.back()} testID="action-more"><Text style={styles.actionText}>More</Text></TouchableOpacity>
       </View>
     </View>
   );
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   muted: { color: '#C6B88E' },
   body: { color: '#EDEAE0', marginTop: 8, lineHeight: 22 },
-  actionRow: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#EEE', backgroundColor: '#FAFAFA', padding: 8, justifyContent: 'space-around' },
+  actionRow: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#EEE', backgroundColor: '#FAFAFA', paddingHorizontal: 12, paddingTop: 8, paddingBottom: 8, justifyContent: 'space-around' },
   action: { paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#111', borderRadius: 12 },
   actionText: { color: '#fff', fontWeight: '800' },
 });
