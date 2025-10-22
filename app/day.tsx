@@ -136,15 +136,19 @@ export default function DayDetailScreen() {
         {/* Events list */}
         {todaysEvents.length > 0 && (
           <View style={styles.eventsSection}>
-            {todaysEvents.map((ev) => (
-              <TouchableOpacity key={ev.id} style={styles.eventCard} onPress={() => router.push({ pathname: '/event-detail', params: { id: ev.id } } as any)} testID={`event-${ev.id}`}>
-                <Text style={styles.eventTitle}>{ev.title || (ev.type === 'quote' ? 'Quote of the Day' : 'Event')}</Text>
-                <Text style={styles.eventSubtitle}>{ev.allDay ? 'All day' : `${ev.startTime ?? ''}${ev.endTime ? ` → ${ev.endTime}` : ''}`}</Text>
-                {ev.notes ? (
-                  <Text numberOfLines={4} style={styles.eventBody}>{ev.notes}</Text>
-                ) : null}
-              </TouchableOpacity>
-            ))}
+            {todaysEvents.map((ev) => {
+              const isRevealDay = settings.quote.revealDate === ymd && ev.type === 'quote';
+              const dynamicText = isRevealDay && settings.quote.lastQuote ? `${settings.quote.lastQuote.text} — ${settings.quote.lastQuote.author}${settings.quote.lastQuote.years ? ` ${settings.quote.lastQuote.years}` : ''}` : ev.notes;
+              return (
+                <TouchableOpacity key={ev.id} style={styles.eventCard} onPress={() => router.push({ pathname: '/event-detail', params: { id: ev.id } } as any)} testID={`event-${ev.id}`}>
+                  <Text style={styles.eventTitle}>{ev.title || (ev.type === 'quote' ? 'Quote of the Day' : 'Event')}</Text>
+                  <Text style={styles.eventSubtitle}>{ev.allDay ? 'All day' : `${ev.startTime ?? ''}${ev.endTime ? ` → ${ev.endTime}` : ''}`}</Text>
+                  {dynamicText ? (
+                    <Text numberOfLines={4} style={styles.eventBody}>{dynamicText}</Text>
+                  ) : null}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
 

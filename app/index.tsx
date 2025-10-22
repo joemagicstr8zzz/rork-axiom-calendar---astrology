@@ -252,13 +252,16 @@ export default function CalendarScreen() {
   const QuoteCard = useMemo(() => {
     const q = settings.quote.lastQuote;
     if (!settings.quote.enabled || !q) return null;
+    const sel = selectedDate ? `${selectedDate.getFullYear()}-${`${selectedDate.getMonth()+1}`.padStart(2,'0')}-${`${selectedDate.getDate()}`.padStart(2,'0')}` : null;
+    const isRevealDay = sel && settings.quote.revealDate && sel === settings.quote.revealDate;
+    if (!isRevealDay) return null;
     return (
       <View style={styles.quoteCard} testID="quote-card">
         <Text style={styles.quoteText}>“{q.text}”</Text>
         <Text style={styles.quoteAuthor}>— {q.author}{q.years ? ` ${q.years}` : ''}</Text>
       </View>
     );
-  }, [settings.quote.enabled, settings.quote.lastQuote]);
+  }, [settings.quote.enabled, settings.quote.lastQuote, settings.quote.revealDate, selectedDate]);
 
   const screenWidth = Dimensions.get('window').width;
   const daySize = (screenWidth - 48) / 7;

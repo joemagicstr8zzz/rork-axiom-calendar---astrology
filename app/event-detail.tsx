@@ -7,7 +7,7 @@ import { useApp } from '@/contexts/AppContext';
 export default function EventDetail() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { events, deleteEvent } = useApp();
+  const { events, deleteEvent, settings } = useApp();
   const ev = events.find(e => e.id === id);
   if (!ev) {
     return (
@@ -20,6 +20,11 @@ export default function EventDetail() {
 
   const dateStr = new Date(ev.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
+  const ymd = ev.date;
+  const dynamicText = ev.type === 'quote' && ymd === (settings.quote.revealDate ?? '') && settings.quote.lastQuote
+    ? `${settings.quote.lastQuote.text} — ${settings.quote.lastQuote.author}${settings.quote.lastQuote.years ? ` ${settings.quote.lastQuote.years}` : ''}`
+    : ev.notes;
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}> 
       <Stack.Screen options={{ title: '', headerShadowVisible: false }} />
@@ -28,7 +33,7 @@ export default function EventDetail() {
           <Text style={styles.title}>{ev.title}</Text>
           <View style={styles.row}><Text style={styles.muted}>{dateStr}</Text><Text style={styles.muted}>{ev.allDay ? 'All day' : `${ev.startTime ?? ''}${ev.endTime ? ` → ${ev.endTime}` : ''}`}</Text></View>
           <View style={styles.row}><Text style={styles.muted}>My calendars</Text></View>
-          {ev.notes ? <Text style={styles.body}>{ev.notes}</Text> : null}
+          {dynamicText ? <Text style={styles.body}>{dynamicText}</Text> : null}
         </View>
       </ScrollView>
 

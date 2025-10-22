@@ -79,6 +79,7 @@ interface QuoteSettings {
   injectRevealsEnabled?: boolean;
   quoteDayDefault?: 'today' | 'tomorrow' | 'pick';
   quoteDayPickDate?: string | null;
+  revealDate?: string | null;
 }
 
 export interface EventItem {
@@ -163,6 +164,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     injectRevealsEnabled: false,
     quoteDayDefault: 'today',
     quoteDayPickDate: null,
+    revealDate: null,
   },
 };
 
@@ -523,17 +525,23 @@ export const [AppProvider, useApp] = createContextHook(() => {
   };
 
   const addOrUpdateEvent = useCallback(async (evt: EventItem) => {
-    const idx = events.findIndex(e => e.id === evt.id);
     const nowTs = Date.now();
     const normalized: EventItem = { ...evt, updatedAt: nowTs, createdAt: (evt.createdAt ?? nowTs) } as EventItem;
-    if (idx >= 0) {
-      const next = [...events];
-      next[idx] = normalized;
-      await persistEvents(next);
-    } else {
-      await persistEvents([normalized, ...events]);
+
+    let next = [...events];
+    if (normalized.type === 'quote') {
+      next = next.filter(e => e.type !== 'quote' || e.id === normalized.id);
+      await updateQuote({ revealDate: normalized.date });
     }
-  }, [events]);
+
+    const existingIndex = next.findIndex(e => e.id === normalized.id);
+    if (existingIndex >= 0) {
+      next[existingIndex] = normalized;
+    } else {
+      next = [normalized, ...next];
+    }
+    await persistEvents(next);
+  }, [events, updateQuote]);
 
   const deleteEvent = useCallback(async (id: string) => {
     await persistEvents(events.filter(e => e.id !== id));
