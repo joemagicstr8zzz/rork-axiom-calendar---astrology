@@ -252,8 +252,10 @@ export default function CalendarScreen() {
   const QuoteCard = useMemo(() => {
     const q = settings.quote.lastQuote;
     if (!settings.quote.enabled || !q) return null;
-    const sel = selectedDate ? `${selectedDate.getFullYear()}-${`${selectedDate.getMonth()+1}`.padStart(2,'0')}-${`${selectedDate.getDate()}`.padStart(2,'0')}` : null;
-    const isRevealDay = sel && settings.quote.revealDate && sel === settings.quote.revealDate;
+    const fmt = (d: Date) => `${d.getFullYear()}-${`${d.getMonth()+1}`.padStart(2,'0')}-${`${d.getDate()}`.padStart(2,'0')}`;
+    const baseDate = selectedDate ?? new Date();
+    const sel = fmt(baseDate);
+    const isRevealDay = !!settings.quote.revealDate && sel === settings.quote.revealDate;
     if (!isRevealDay) return null;
     return (
       <View style={styles.quoteCard} testID="quote-card">
