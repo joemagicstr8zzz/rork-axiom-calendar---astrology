@@ -3,12 +3,14 @@ import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Search as SearchIcon, X } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
+import { useLicense } from '@/contexts/LicenseContext';
 import { parseCardInput, cardToWeekRange, weekNumberToRange } from '@/utils/mapping';
 import { ZODIAC_SIGNS } from '@/constants/zodiac';
 
 export default function SearchScreen() {
   const router = useRouter();
   const { currentStack, settings } = useApp();
+  const { licensed } = useLicense();
   const [query, setQuery] = useState<string>('');
   const [result, setResult] = useState<string | null>(null);
 
@@ -122,7 +124,7 @@ export default function SearchScreen() {
             <SearchIcon size={20} color="#999" style={styles.searchIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Search dates, signs, or cards..."
+              placeholder={licensed ? 'Search dates, signs, or cards...' : ''}
               placeholderTextColor="#999"
               value={query}
               onChangeText={setQuery}
@@ -130,6 +132,7 @@ export default function SearchScreen() {
               returnKeyType="search"
               autoCapitalize="characters"
               autoCorrect={false}
+              testID="search-input"
             />
             {query.length > 0 && (
               <TouchableOpacity onPress={() => setQuery('')} style={styles.clearButton}>
@@ -149,13 +152,15 @@ export default function SearchScreen() {
           </View>
         )}
 
-        <View style={styles.hintCard}>
-          <Text style={styles.hintTitle}>Search Examples</Text>
-          <Text style={styles.hintText}>• Zodiac signs: &ldquo;Aries&rdquo;, &ldquo;Gemini&rdquo;</Text>
-          <Text style={styles.hintText}>• Single card: &ldquo;4H&rdquo;, &ldquo;JS&rdquo;, &ldquo;QD&rdquo;</Text>
-          <Text style={styles.hintText}>• Weeks: &ldquo;#41&rdquo; to jump to Week 41</Text>
-          <Text style={styles.hintText}>• Multiple cards: &ldquo;4H JS&rdquo; or &ldquo;4H JS QD&rdquo;</Text>
-        </View>
+        {licensed ? (
+          <View style={styles.hintCard} testID="search-examples">
+            <Text style={styles.hintTitle}>Search Examples</Text>
+            <Text style={styles.hintText}>• Zodiac signs: &ldquo;Aries&rdquo;, &ldquo;Gemini&rdquo;</Text>
+            <Text style={styles.hintText}>• Single card: &ldquo;4H&rdquo;, &ldquo;JS&rdquo;, &ldquo;QD&rdquo;</Text>
+            <Text style={styles.hintText}>• Weeks: &ldquo;#41&rdquo; to jump to Week 41</Text>
+            <Text style={styles.hintText}>• Multiple cards: &ldquo;4H JS&rdquo; or &ldquo;4H JS QD&rdquo;</Text>
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );
