@@ -7,6 +7,7 @@ import { AppProvider } from "@/contexts/AppContext";
 import { LicenseProvider } from "@/contexts/LicenseContext";
 import { StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { trpc, trpcClient } from "@/lib/trpc";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -37,17 +38,19 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={styles.container}>
-        <SafeAreaProvider>
-          <LicenseProvider>
-            <AppProvider>
-              <RootLayoutNav />
-            </AppProvider>
-          </LicenseProvider>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
-    </QueryClientProvider>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <GestureHandlerRootView style={styles.container}>
+          <SafeAreaProvider>
+            <LicenseProvider>
+              <AppProvider>
+                <RootLayoutNav />
+              </AppProvider>
+            </LicenseProvider>
+          </SafeAreaProvider>
+        </GestureHandlerRootView>
+      </QueryClientProvider>
+    </trpc.Provider>
   );
 }
 
