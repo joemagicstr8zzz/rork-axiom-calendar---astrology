@@ -2,15 +2,27 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, TextInput
 import { Stack, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/contexts/AppContext';
+import { useLicense } from '@/contexts/LicenseContext';
+import LicenseGate from '@/components/LicenseGate';
 import { StackType } from '@/constants/stacks';
 
 export default function SettingsScreen() {
   const { settings, saveSettings, updateForce, updateQuote, validateOpenAIKey, validateInjectUrl, generateQuoteFromWord } = useApp();
+  const { licensed, isAdmin } = useLicense();
   const insets = useSafeAreaInsets();
 
   const handleStackChange = (stackType: StackType) => {
     saveSettings({ stackType });
   };
+
+  if (!licensed && !isAdmin) {
+    return (
+      <View style={[styles.container]}>
+        <Stack.Screen options={{ title: 'Settings Locked' }} />
+        <LicenseGate />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}> 
