@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, TextInput, Platform } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -5,11 +6,17 @@ import { useApp } from '@/contexts/AppContext';
 import { useLicense } from '@/contexts/LicenseContext';
 import LicenseGate from '@/components/LicenseGate';
 import { StackType } from '@/constants/stacks';
+import { CheckCircle2, XCircle } from 'lucide-react-native';
 
 export default function SettingsScreen() {
-  const { settings, saveSettings, updateForce, updateQuote, validateOpenAIKey, validateInjectUrl, generateQuoteFromWord } = useApp();
+  const { settings, saveSettings, updateForce, updateQuote, validateOpenAIKey, validateInjectUrl } = useApp();
   const { licensed, isAdmin } = useLicense();
   const insets = useSafeAreaInsets();
+
+  const [injectValidity, setInjectValidity] = React.useState<'unknown' | 'valid' | 'invalid'>('unknown');
+  const [injectMessage, setInjectMessage] = React.useState<string>('');
+  const [openaiValidity, setOpenaiValidity] = React.useState<'unknown' | 'valid' | 'invalid'>('unknown');
+  const [openaiMessage, setOpenaiMessage] = React.useState<string>('');
 
   const handleStackChange = (stackType: StackType) => {
     saveSettings({ stackType });
@@ -77,29 +84,25 @@ export default function SettingsScreen() {
               autoCorrect={false}
               value={settings.quote.injectUrl ?? ''}
               onChangeText={(t) => updateQuote({ injectUrl: t.trim() })}
+              onEndEditing={async () => {
+                const res = await validateInjectUrl();
+                setInjectValidity(res.ok ? 'valid' : 'invalid');
+                setInjectMessage(res.ok ? 'Valid' : (res.message || 'Invalid'));
+              }}
             />
-            <View style={styles.rowButtons}>
-              <TouchableOpacity
-                testID="validate-inject"
-                style={[styles.smallBtn, styles.btnPrimary]}
-                onPress={async () => {
-                  const res = await validateInjectUrl();
-                  updateQuote({ errorMessage: res.ok ? null : res.message });
-                }}
-              >
-                <Text style={styles.smallBtnText}>Validate Inject</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                testID="listen-now"
-                style={[styles.smallBtn, styles.btnGhost]}
-                onPress={async () => {
-                  if (settings.quote.injectUrl) {
-                    updateQuote({ status: 'listening', errorMessage: null });
-                  }
-                }}
-              >
-                <Text style={[styles.smallBtnText, { color: '#111' }]}>Listen</Text>
-              </TouchableOpacity>
+            <View style={styles.validationRow}>
+              {injectValidity !== 'unknown' && (
+                <View style={styles.validationPill} testID="inject-validation">
+                  {injectValidity === 'valid' ? (
+                    <CheckCircle2 size={18} color="#10B981" />
+                  ) : (
+                    <XCircle size={18} color="#EF4444" />
+                  )}
+                  <Text style={[styles.validationText, { color: injectValidity === 'valid' ? '#065F46' : '#7F1D1D' }]}>
+                    {injectValidity === 'valid' ? 'Valid' : `Invalid${injectMessage ? ` · ${injectMessage}` : ''}`}
+                  </Text>
+                </View>
+              )}
             </View>
 
             <Text style={[styles.cardLabel, { marginTop: 16 }]}>OpenAI API Key</Text>
@@ -113,28 +116,25 @@ export default function SettingsScreen() {
               value={settings.quote.openaiApiKey ?? ''}
               secureTextEntry={true}
               onChangeText={(t) => updateQuote({ openaiApiKey: t.trim() })}
+              onEndEditing={async () => {
+                const res = await validateOpenAIKey();
+                setOpenaiValidity(res.ok ? 'valid' : 'invalid');
+                setOpenaiMessage(res.ok ? 'Valid' : (res.message || 'Invalid'));
+              }}
             />
-            <View style={styles.rowButtons}>
-              <TouchableOpacity
-                testID="validate-openai"
-                style={[styles.smallBtn, styles.btnPrimary]}
-                onPress={async () => {
-                  const res = await validateOpenAIKey();
-                  updateQuote({ errorMessage: res.ok ? null : res.message });
-                }}
-              >
-                <Text style={styles.smallBtnText}>Validate Key</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                testID="test-generate"
-                style={[styles.smallBtn, styles.btnGhost]}
-                onPress={async () => {
-                  const word = settings.quote.lastWord ?? 'wonder';
-                  await generateQuoteFromWord(word);
-                }}
-              >
-                <Text style={[styles.smallBtnText, { color: '#111' }]}>Test Generate</Text>
-              </TouchableOpacity>
+            <View style={styles.validationRow}>
+              {openaiValidity !== 'unknown' && (
+                <View style={styles.validationPill} testID="openai-validation">
+                  {openaiValidity === 'valid' ? (
+                    <CheckCircle2 size={18} color="#10B981" />
+                  ) : (
+                    <XCircle size={18} color="#EF4444" />
+                  )}
+                  <Text style={[styles.validationText, { color: openaiValidity === 'valid' ? '#065F46' : '#7F1D1D' }]}>
+                    {openaiValidity === 'valid' ? 'Valid' : `Invalid${openaiMessage ? ` · ${openaiMessage}` : ''}`}
+                  </Text>
+                </View>
+              )}
             </View>
 
             <Text style={[styles.cardLabel, { marginTop: 16 }]}>Prompt Template</Text>
@@ -747,6 +747,24 @@ const styles = StyleSheet.create({
   smallBtnText: { color: '#fff', fontWeight: '700' },
   btnPrimary: { backgroundColor: '#007AFF' },
   btnGhost: { backgroundColor: '#EFEFEF' },
+  validationRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  validationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  validationText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
   previewQuote: {
     marginTop: 16,
     backgroundColor: '#111',
