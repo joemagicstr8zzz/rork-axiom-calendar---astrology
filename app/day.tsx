@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, PanResponder, GestureResponderEvent } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp, EventItem } from '@/contexts/AppContext';
 import { getHolidaysMapForMonth } from '@/constants/holidays';
@@ -9,6 +10,7 @@ const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 
 export default function DayDetailScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { year, month, day } = useLocalSearchParams<{
     year: string;
     month: string;
@@ -163,7 +165,7 @@ export default function DayDetailScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      <View style={styles.addBarWrapper}>
+      <View style={[styles.addBarWrapper, { bottom: Math.max(insets.bottom, 16) }]}>
         <TouchableOpacity style={styles.addBar} onPress={() => router.push({ pathname: '/event-editor', params: { date: ymd, type: 'quote' } } as any)} testID="add-event">
           <Text style={styles.addBarText}>Add event on {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Text>
         </TouchableOpacity>
