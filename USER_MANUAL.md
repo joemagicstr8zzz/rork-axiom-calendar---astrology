@@ -1,83 +1,115 @@
-Axiom Calendar — Friendly User Manual
+Axiom Calendar — Start Here + User Manual
 
-Welcome! This guide explains, in plain language, how to use the calendar, add events, and work with Quotes of the Day. It also covers how the “Inject” source and optional AI polishing (GPT) can help you create cleaner quotes. No magic jargon required.
+Welcome. This guide is a clear, friendly reference for setting up your calendar, creating Events and Reminders, and running a single, intentional Quote of the Day that can be sourced from Inject and optionally polished by AI (GPT). It also includes a practical “Start Here,” scripting/performance tips, real‑world scenarios, and broader historical reasoning for using a calendar.
 
-1) What you see on the Home screen
-- Month view: A normal calendar. Tap any date to see that day’s details.
-- Day details: Shows the selected date, any events for that day, and—if one exists—the Quote of the Day.
-- Add event bar and + button: Two ways to add an event. They do the same thing.
+Start Here (5‑minute setup)
+1) Open the app to the Month screen
+- Tap dates to view their Day details. The Add bar or + creates new items.
 
-2) Events, reminders, and quotes — what’s the difference?
-- Regular event: Anything you schedule (meeting, birthday, etc.).
-- Reminder: A lightweight event with an alert time. (You set this when creating an event.)
-- Quote of the Day: A special one‑day event whose main content is a quote. It appears only on the date it belongs to and inside that date’s detail screen.
+2) Decide how you’ll create quotes
+- Manual: Type the quote yourself in Notes.
+- Semi‑auto: Provide an Inject endpoint that returns JSON { "value": "your text" } and use that raw text.
+- Polished by AI: Turn the Inject value into a ready‑to‑share quote by enabling GPT in Settings.
 
-3) Quote of the Day rules
-- Only one “Reveal Day” at a time: If you set a new reveal day, the previous one is replaced. There isn’t more than one reveal day.
-- Where it shows: The full quote shows in that day’s detail screen. In the month grid, that day can show a small colored bar so you know something is scheduled.
-- When it shows: If a reveal day is already set, the quote appears as soon as you open the app to the month screen and that day is selected. You don’t need to tap again.
+3) Set a single Reveal Day for the Quote of the Day
+- Only one reveal day can exist at a time. Setting a new reveal day replaces the previous.
+- If a reveal day is already set, the quote appears right away when you land on the Month screen with that day selected.
 
-4) How quotes are created
-You can type a quote yourself, or let the app help gather and polish it:
-- Inject (optional): Pulls a single piece of text from a simple web address you control. We only read a JSON field named "value". Example: { "value": "courage" }
-- GPT polishing (optional): If enabled, the app takes the Inject word and asks AI to turn it into a clean, ready‑to‑use quote (with an author line). If AI is off, the app just uses the raw Inject text.
-- Final storage: The text the app ends up with is saved into the event’s notes so it works offline.
+4) Add your normal items
+- Events and Reminders are separate from the Quote. They show as small bars on the Month view and full details in Day details.
 
-Live updates from Inject
-- If the app is open on the calendar screen and your Inject value changes on your endpoint, the quote preview updates on its own within about a second. You don’t need to tap anything.
+5) Confirm Inject is working (if used)
+- In Settings, paste your Inject address (without http/https) and tap Validate. We expect JSON with a single field named value.
 
-5) Adding a Quote of the Day
-- Step 1: Tap the Add event bar (or the + button) on the main screen.
-- Step 2: In the editor, choose the event type as “Quote” (or use the Quote of the Day template if offered).
-- Step 3: Pick the date for the quote. Remember: only one reveal day can be active at a time. Setting a new day will replace the previous one.
-- Step 4: If Inject and GPT are on, the app shows a preview. You can still edit the final text in Notes if you want.
-- Step 5: Save. The quote is now attached to that day.
+Core Concepts
+- Event: Anything scheduled (meeting, birthday, rehearsal). Can include location, times, notes, repeat, alerts.
+- Reminder: A lightweight event that nudges you at a chosen time.
+- Quote of the Day: One intentional quote attached to a single reveal date. Appears on that date’s Day details; the month grid can show a colored indicator.
+- Inject: A simple JSON source for a single value field. Example payload: { "value": "courage" }.
+- GPT Polishing (optional): Converts Inject value into a succinct, attributed quote. If GPT fails, we fall back to raw Inject.
+- Focus of the Month: A guiding word/phrase you choose per month (e.g., January = Foundation, February = Connection). It’s a thematic lens that informs your quote selection and event planning.
 
-6) Adding a regular event or reminder
-- Open the Day details or tap the Add event bar from the month screen.
-- Fill in Title, Date, and if needed, Start and End time.
-- Optional: Location, which calendar it belongs to, reminder time, repeat, notes, attachment, and time zone.
-- Save. The event appears as a small bar on the month view and in the Day details.
+How Quotes Work (at a glance)
+- One reveal day at a time: The latest setting wins; older reveal days are replaced.
+- Where it shows: Full quote in Day details. The month grid shows a small indicator to hint something is scheduled.
+- When it shows: If a reveal day is set, the quote appears as soon as you open the app and that day is selected—no extra taps needed.
+- Live updates: When Inject changes while you’re on the calendar, the preview updates within about a second.
 
-7) Settings explained simply
-Inject
-- Purpose: Automatically provide a single word or short text that represents your quote topic.
-- How to set: Enter the address without http/https. Example: 11z.co/_w/123456/selection
-- What we expect: JSON with a "value" field. Only that field is used.
-- Tools: Validate checks the address and shows you the status. Timeout sets how long we wait.
+Create a Quote of the Day
+1) Tap Add (bar or +) on the Month screen.
+2) Choose Quote (or the Quote template).
+3) Pick the reveal date. Remember: only one reveal date exists at a time.
+4) If Inject and GPT are enabled, review the preview. You can still edit Notes.
+5) Save. The quote is now attached to that date.
 
-Use GPT Translation (optional)
-- Purpose: Turn the Inject word into a polished quote with an author line.
-- How to set: Enter your OpenAI key and pick a model (e.g., gpt-4o-mini). Enable the toggle.
-- Prompt: You can edit it. The default asks for a short, inspirational quote and attribution. If no real quote exists, it asks for a plausible original with birth–death years (or “present”).
-- Validate: Confirms your key/model are working.
+Add Events or Reminders
+- From Month or Day details, tap Add. Fill in Title, Date, times, reminder, repeat, location, notes, or attachments. Save. Items appear in Month and Day views.
 
-Quote day default
-- Purpose: Pre-fill the date when you create a new Quote.
-- Options: Today, Tomorrow, or Pick a date.
+Settings — Plain English
+- Inject
+  • Purpose: Feed a single word/short text that represents your quote theme.
+  • Address: Enter without http/https (e.g., 11z.co/_w/123456/selection).
+  • Format: JSON with a value field only. Example: { "value": "renewal" }.
+  • Tools: Validate to check status; Timeout controls how long we wait.
+- Use GPT Translation (optional)
+  • Purpose: Turn Inject value into a refined quote with attribution.
+  • How: Provide OpenAI key, choose a model, enable the toggle, and optionally customize the prompt.
+  • Validate: Verifies your key/model.
+- Quote day default
+  • Purpose: Pre‑fill a date when creating a Quote (Today, Tomorrow, or custom).
+- Performance time zone
+  • Purpose: Keep date math consistent across locales.
 
-Performance time zone
-- Purpose: Dates and times are saved consistently, regardless of where you are.
+Real‑World Scenarios
+- Client coaching cadence
+  • Focus of the Month: January = Foundation. Inject surfaces a daily cue (e.g., resilience). GPT refines it into a clean reflection. You schedule one reveal day per week for group focus.
+- Studio production schedule
+  • Events track milestones; Reminders nudge handoffs. A single Quote reveals on sprint kickoff day to set tone (e.g., craft, clarity, rhythm).
+- Ritual calendar for practitioners
+  • Focus aligns with lunar phases or seasonal rites. Inject cycles a virtue; the quote reveals on the key ritual date. Everything stays contained in one day to avoid clutter.
+- Sales team momentum
+  • Monday reveal day sets intent (service, integrity). Events capture calls, demos; Reminders handle follow‑ups. Single weekly reveal prevents notification fatigue.
 
-8) What you’ll see in the editor for quotes
-- Sources box: Shows whether Inject and GPT are ON, and previews what will be saved.
-- Save behavior:
-  - If Inject is ON and GPT is OFF: We save the Inject value as your quote text.
-  - If both are ON: We transform the Inject value into a polished quote.
-  - If Inject fails: We fall back to the last preview if available, otherwise your manual text in Notes.
-  - If GPT fails: We use the raw Inject value.
+Scripting & Performance Tips
+- Keep Inject minimal and stable
+  • Use a cached endpoint that returns only { "value": "…" }. Avoid large payloads, HTML, or changing keys.
+- Debounce your updates
+  • If your backend updates value rapidly, gate changes to at most once every few seconds to avoid flicker.
+- Keep quotes succinct
+  • Aim for 1–3 lines. Long quotes truncate on smaller screens. Let Notes hold any extended commentary.
+- Time zones
+  • Set and stick to a performance time zone in Settings so reveal days behave the same for distributed teams.
+- GPT prompting
+  • Be explicit about tone and length. Example: “One original, inspiring line with author name; add plausible dates if unknown.”
+- Offline behavior
+  • On save, the final quote text is written into Notes so it’s still visible without network.
+- Testing checklist
+  • Change Inject value; confirm preview updates on the Month screen.
+  • Set a reveal day; reopen app to Month; ensure the quote is already visible for that date.
+  • Replace the reveal day; confirm only the new date shows a quote.
+  • Turn off GPT; ensure raw Inject text is used. Break Inject; confirm graceful fallback.
 
-9) Viewing and finding things
-- Month view: Shows up to a few small bars per day for scheduled items. Quote days are colored to match the app’s theme.
-- Day details: Tap any date to see full info and read the quote if one exists for that day.
+Why a Calendar? Practical and Philosophical
+- Calendars are human tools for rhythm: agricultural seasons, liturgical cycles, studio sprints, and personal rituals. They transform intention into scheduled action. A single reveal day for a Quote enforces focus—one theme, one anchor—rather than fragmented inspiration.
+- Historically, calendars united communities around shared moments (harvests, festivals, markets) and synchronized effort. Philosophically, they embody the dance of cyclical time (seasons) with linear progress (projects). By binding quotes to dates, we move from vague aspiration to timed commitment.
 
-10) Troubleshooting
-- Inject doesn’t change: Make sure the endpoint returns JSON with a "value" and use Validate in Settings.
-- The quote didn’t appear: Confirm the reveal day is set to the right date. Only one reveal day can exist.
-- Seeing an old quote: If your Inject endpoint changed, give it a second on the main calendar screen. If needed, reopen the app to the month screen with that day selected.
-- GPT errors: Check your API key and model, then Validate. We’ll fall back to the raw Inject text automatically.
+Troubleshooting
+- Inject doesn’t change
+  • Ensure the endpoint returns JSON with value. Use Validate in Settings.
+- Quote didn’t appear
+  • Confirm the reveal day is set for that date. Only one reveal day can exist.
+- Old quote persists
+  • Wait a second on the Month screen for the preview to refresh, or reopen the app to that month view with the date selected.
+- GPT errors
+  • Recheck key/model and run Validate. We fall back to raw Inject automatically.
 
-11) Privacy and safety
-- Your Inject address and any API keys are stored locally on your device. Do not share them publicly.
+Privacy & Safety
+- Keep your Inject URL and API keys private. They are stored locally on your device.
 
-That’s it! You now know how to create and reveal a Quote of the Day, schedule regular events and reminders, and control how quotes are sourced and polished. Enjoy.
+Glossary
+- Reveal Day: The single date on which the Quote of the Day appears.
+- Inject: A JSON endpoint returning { "value": "…" } only.
+- Focus of the Month: Your thematic word guiding quotes and planning.
+- Preview: The currently computed text shown before saving.
+
+You’re set. Use Focus to pick an intentional theme, Inject to keep inputs simple, GPT to refine when needed, and the calendar to turn ideas into timed, visible action.
