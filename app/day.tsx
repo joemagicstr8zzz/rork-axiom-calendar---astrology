@@ -85,12 +85,16 @@ export default function DayDetailScreen() {
           </View>
         </TouchableOpacity>
 
-        <View style={styles.zodiacCard}>
-          <View style={styles.zodiacHeader}>
-            <Text style={styles.zodiacSymbol}>{zodiacSign.symbol}</Text>
-            <View style={styles.zodiacInfo}>
-              <Text style={styles.zodiacName}>{zodiacSign.name}</Text>
-              <Text style={styles.zodiacElement}>{zodiacSign.element}</Text>
+        <View style={styles.compactHeaderRow} testID="day-compact-row">
+          <View style={styles.focusInline} testID="focus-inline">
+            <Text style={styles.focusInlineLabel}>Focus</Text>
+            <Text style={styles.focusInlineWord}>{focusWord}</Text>
+          </View>
+          <View style={styles.astroBadge} testID="astro-badge">
+            <Text style={styles.astroSymbol}>{zodiacSign.symbol}</Text>
+            <View style={{ marginLeft: 8 }}>
+              <Text style={styles.astroName}>{zodiacSign.name}</Text>
+              <Text style={styles.astroDates}>{zodiacSign.element}</Text>
             </View>
           </View>
         </View>
@@ -126,11 +130,6 @@ export default function DayDetailScreen() {
             )}
           </View>
         )}
-
-        <View style={styles.focusCard}>
-          <Text style={styles.focusLabel}>Focus Word</Text>
-          <Text style={styles.focusWord}>{focusWord}</Text>
-        </View>
 
         {/* Events list */}
         {todaysEvents.length > 0 && (
@@ -196,75 +195,91 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 24,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   dayNumber: {
-    fontSize: 72,
+    fontSize: 64,
     fontWeight: '700',
     color: '#111',
     letterSpacing: -2,
   },
   weekday: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '600',
     color: '#333',
-    marginTop: 4,
+    marginTop: 2,
     letterSpacing: 0.3,
   },
   dateText: {
-    fontSize: 16,
-    color: '#999',
-    marginTop: 8,
-    letterSpacing: 0.3,
-  },
-  weekRange: {
     fontSize: 14,
-    color: '#666',
+    color: '#999',
     marginTop: 6,
     letterSpacing: 0.3,
   },
-  zodiacCard: {
+  weekRange: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+    letterSpacing: 0.3,
+  },
+  compactHeaderRow: {
     marginHorizontal: 24,
-    padding: 20,
+    marginTop: 8,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12 as unknown as number,
+  },
+  focusInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginBottom: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 999,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
-  zodiacHeader: {
+  focusInlineLabel: {
+    fontSize: 12,
+    color: '#999',
+    fontWeight: '600',
+    marginRight: 8,
+    letterSpacing: 0.3,
+  },
+  focusInlineWord: {
+    fontSize: 16,
+    color: '#111',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  astroBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  zodiacSymbol: {
-    fontSize: 40,
-    marginRight: 16,
-  },
-  zodiacInfo: {
-    flex: 1,
-  },
-  zodiacName: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#111',
-    letterSpacing: 0.3,
-  },
-  zodiacElement: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 4,
-    letterSpacing: 0.3,
-  },
+  astroSymbol: { fontSize: 22 },
+  astroName: { fontSize: 14, fontWeight: '700', color: '#111', letterSpacing: 0.3 },
+  astroDates: { fontSize: 12, color: '#999', letterSpacing: 0.3 },
   readingCard: {
     marginHorizontal: 24,
-    padding: 20,
+    padding: 12,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    marginBottom: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -272,34 +287,34 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   readingTitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#999',
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   readingText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
-    lineHeight: 24,
+    lineHeight: 20,
     letterSpacing: 0.3,
   },
   holidayCard: {
     marginHorizontal: 24,
-    padding: 16,
+    padding: 12,
     backgroundColor: '#FFF5F5',
     borderRadius: 16,
-    marginBottom: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#FFD6D6',
   },
   overrideCard: {
     marginHorizontal: 24,
-    padding: 20,
+    padding: 12,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    marginBottom: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -307,22 +322,22 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   overrideTitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#999',
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   overridePublic: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   overrideItemsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 8,
+    marginTop: 6,
   },
   overrideChip: {
     backgroundColor: '#F1F8FF',
@@ -337,7 +352,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   holidayTitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#B00020',
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -345,55 +360,28 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   holidayText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#8E0000',
     fontWeight: '600',
     marginTop: 2,
   },
-  focusCard: {
-    marginHorizontal: 24,
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  focusLabel: {
-    fontSize: 14,
-    color: '#999',
-    fontWeight: '500',
-    letterSpacing: 0.3,
-  },
-  focusWord: {
-    fontSize: 20,
-    color: '#111',
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
   rehearsalCard: {
     marginHorizontal: 24,
-    padding: 20,
+    padding: 12,
     backgroundColor: '#FFF3CD',
     borderRadius: 16,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   rehearsalLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#856404',
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 6,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   rehearsalValue: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#856404',
     fontWeight: '600',
     letterSpacing: 0.3,
@@ -401,7 +389,7 @@ const styles = StyleSheet.create({
   signButton: {
     marginHorizontal: 24,
     marginBottom: 100,
-    padding: 18,
+    padding: 14,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     alignItems: 'center',
@@ -417,13 +405,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.3,
   },
-  eventsSection: { marginHorizontal: 24, marginBottom: 16 },
-  eventCard: { backgroundColor: '#E6F0FA', borderRadius: 16, padding: 16 },
+  eventsSection: { marginHorizontal: 24, marginBottom: 12 },
+  eventCard: { backgroundColor: '#E6F0FA', borderRadius: 16, padding: 14 },
   eventTitle: { color: '#C6B88E', fontWeight: '800', fontSize: 16 },
-  eventSubtitle: { color: '#C6B88E', marginTop: 2, marginBottom: 8 },
+  eventSubtitle: { color: '#C6B88E', marginTop: 2, marginBottom: 6 },
   eventBody: { color: '#111', lineHeight: 20 },
   addBarWrapper: { position: 'absolute', left: 0, right: 0, bottom: 16, paddingHorizontal: 16 },
-  addBar: { backgroundColor: '#3C484F', paddingVertical: 14, borderRadius: 28, alignItems: 'center', borderWidth: 1, borderColor: '#E4D8A5' },
+  addBar: { backgroundColor: '#3C484F', paddingVertical: 12, borderRadius: 28, alignItems: 'center', borderWidth: 1, borderColor: '#E4D8A5' },
   addBarText: { color: '#E4D8A5', fontWeight: '700' },
   fab: { position: 'absolute', right: 16, bottom: 8, width: 56, height: 56, borderRadius: 12, backgroundColor: '#111', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#333' },
   peekOverlay: {
