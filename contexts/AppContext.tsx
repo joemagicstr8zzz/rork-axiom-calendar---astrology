@@ -194,26 +194,20 @@ export const [AppProvider, useApp] = createContextHook(() => {
     try {
       const stored = await AsyncStorage.getItem('axiom_settings');
       if (stored) {
-        try {
-          const parsed = JSON.parse(stored) as Partial<AppSettings>;
-          const merged: AppSettings = {
-            ...DEFAULT_SETTINGS,
-            ...parsed,
-            force: {
-              ...DEFAULT_SETTINGS.force,
-              ...(parsed.force ?? {} as Partial<ForceSettings>),
-              overridesMap: {
-                ...DEFAULT_SETTINGS.force.overridesMap,
-                ...((parsed.force as Partial<ForceSettings> | undefined)?.overridesMap ?? {}),
-              },
+        const parsed = JSON.parse(stored) as Partial<AppSettings>;
+        const merged: AppSettings = {
+          ...DEFAULT_SETTINGS,
+          ...parsed,
+          force: {
+            ...DEFAULT_SETTINGS.force,
+            ...(parsed.force ?? {} as Partial<ForceSettings>),
+            overridesMap: {
+              ...DEFAULT_SETTINGS.force.overridesMap,
+              ...((parsed.force as Partial<ForceSettings> | undefined)?.overridesMap ?? {}),
             },
-          } as AppSettings;
-          setSettings(merged);
-        } catch (parseErr) {
-          console.log('[Settings] Load failed: SyntaxError. Resetting to defaults.');
-          await AsyncStorage.removeItem('axiom_settings');
-          setSettings(DEFAULT_SETTINGS);
-        }
+          },
+        } as AppSettings;
+        setSettings(merged);
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
